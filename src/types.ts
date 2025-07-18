@@ -8,3 +8,11 @@ export type ScorePayload = {
   target: 'red' | 'blue'; 
   timestamp: number; 
 };
+
+export type ScoreSettings = {
+  headTap: number;
+  headSwipe: number;
+  bodyTap: number;
+  bodySwipe: number;
+  punch: number;
+};

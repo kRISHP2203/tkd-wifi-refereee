@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Sheet,
   SheetContent,
@@ -14,7 +14,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Separator } from "@/components/ui/separator";
-import type { Referee } from "@/types";
+import type { Referee, ScoreSettings } from "@/types";
 
 type SettingsPanelProps = {
   isOpen: boolean;
@@ -23,6 +23,8 @@ type SettingsPanelProps = {
   onRefereeIdChange: (id: Referee) => void;
   serverIp: string;
   onServerIpChange: (ip: string) => void;
+  scoreSettings: ScoreSettings;
+  onScoreSettingsChange: (settings: ScoreSettings) => void;
 };
 
 export default function SettingsPanel({
@@ -32,17 +34,37 @@ export default function SettingsPanel({
   onRefereeIdChange,
   serverIp,
   onServerIpChange,
+  scoreSettings,
+  onScoreSettingsChange,
 }: SettingsPanelProps) {
   const [ipValue, setIpValue] = useState(serverIp);
+  const [localScoreSettings, setLocalScoreSettings] = useState(scoreSettings);
+
+  useEffect(() => {
+    setIpValue(serverIp);
+  }, [serverIp]);
+
+  useEffect(() => {
+    setLocalScoreSettings(scoreSettings);
+  }, [scoreSettings]);
+
 
   const handleSave = () => {
     onServerIpChange(ipValue);
+    onScoreSettingsChange(localScoreSettings);
     onOpenChange(false);
+  };
+
+  const handleScoreChange = (field: keyof ScoreSettings, value: string) => {
+    const numValue = Number(value);
+    if (!isNaN(numValue)) {
+      setLocalScoreSettings(prev => ({ ...prev, [field]: numValue }));
+    }
   };
 
   return (
     <Sheet open={isOpen} onOpenChange={onOpenChange}>
-      <SheetContent>
+      <SheetContent className="overflow-y-auto">
         <SheetHeader>
           <SheetTitle>Settings</SheetTitle>
           <SheetDescription>
@@ -78,6 +100,35 @@ export default function SettingsPanel({
               onChange={(e) => setIpValue(e.target.value)}
               placeholder="e.g., 192.168.0.101"
             />
+          </div>
+
+          <Separator />
+          
+          <div>
+            <Label className="text-base font-semibold">Scoring Settings</Label>
+            <p className="text-sm text-muted-foreground mb-4">Customize points for each action.</p>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="punch-score">Punch</Label>
+                <Input id="punch-score" type="number" value={localScoreSettings.punch} onChange={e => handleScoreChange('punch', e.target.value)} className="w-20" />
+              </div>
+              <div className="flex items-center justify-between">
+                <Label htmlFor="body-kick-score">Body Kick (Tap)</Label>
+                <Input id="body-kick-score" type="number" value={localScoreSettings.bodyTap} onChange={e => handleScoreChange('bodyTap', e.target.value)} className="w-20" />
+              </div>
+              <div className="flex items-center justify-between">
+                <Label htmlFor="body-turn-kick-score">Body Turning Kick (Swipe)</Label>
+                <Input id="body-turn-kick-score" type="number" value={localScoreSettings.bodySwipe} onChange={e => handleScoreChange('bodySwipe', e.target.value)} className="w-20" />
+              </div>
+              <div className="flex items-center justify-between">
+                <Label htmlFor="head-kick-score">Head Kick (Tap)</Label>
+                <Input id="head-kick-score" type="number" value={localScoreSettings.headTap} onChange={e => handleScoreChange('headTap', e.target.value)} className="w-20" />
+              </div>
+              <div className="flex items-center justify-between">
+                <Label htmlFor="head-turn-kick-score">Head Turning Kick (Swipe)</Label>
+                <Input id="head-turn-kick-score" type="number" value={localScoreSettings.headSwipe} onChange={e => handleScoreChange('headSwipe', e.target.value)} className="w-20" />
+              </div>
+            </div>
           </div>
         </div>
         <SheetFooter>

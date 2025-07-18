@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from 'react';
-import type { Referee, ConnectionStatus } from '@/types';
+import type { Referee, ConnectionStatus, ScoreSettings } from '@/types';
 import Header from '@/components/header';
 import RefereeScreen from '@/components/referee-screen';
 import SettingsPanel from '@/components/settings-panel';
@@ -13,6 +13,13 @@ export default function Home() {
   const [serverIp, setServerIp] = useState('');
   const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>('disconnected');
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [scoreSettings, setScoreSettings] = useState<ScoreSettings>({
+    headTap: 3,
+    headSwipe: 5,
+    bodyTap: 2,
+    bodySwipe: 4,
+    punch: 1,
+  });
   const { toast } = useToast()
 
   useEffect(() => {
@@ -21,6 +28,7 @@ export default function Home() {
       if (settings) {
         setRefereeId(settings.refereeId as Referee);
         setServerIp(settings.serverIP);
+        setScoreSettings(settings.scoreSettings);
         if (settings.serverIP) {
           TKDService.connectToServer();
         }
@@ -86,6 +94,11 @@ export default function Home() {
     }
   }
 
+  const handleScoreSettingsChange = (newSettings: ScoreSettings) => {
+    setScoreSettings(newSettings);
+    TKDService.saveScoreSettings(newSettings);
+  };
+
   return (
     <div className="flex flex-col h-screen bg-background text-foreground overflow-hidden">
       <Header 
@@ -93,7 +106,7 @@ export default function Home() {
         onSettingsClick={() => setIsSettingsOpen(true)} 
       />
       <main className="flex-1">
-        <RefereeScreen onScore={handleScore} />
+        <RefereeScreen onScore={handleScore} scoreSettings={scoreSettings} />
       </main>
       <SettingsPanel
         isOpen={isSettingsOpen}
@@ -102,6 +115,8 @@ export default function Home() {
         onRefereeIdChange={handleRefereeIdChange}
         serverIp={serverIp}
         onServerIpChange={handleServerIpChange}
+        scoreSettings={scoreSettings}
+        onScoreSettingsChange={handleScoreSettingsChange}
       />
     </div>
   );

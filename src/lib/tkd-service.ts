@@ -1,10 +1,11 @@
 // @ts-nocheck
 'use client';
 
-import type { Referee, ConnectionStatus, ScorePayload } from '@/types';
+import type { Referee, ConnectionStatus, ScorePayload, ScoreSettings } from '@/types';
 
 const IP_STORAGE_KEY = 'TKD_SERVER_IP';
 const ID_STORAGE_KEY = 'TKD_REFEREE_ID';
+const SCORE_SETTINGS_KEY = 'TKD_SCORE_SETTINGS';
 const WEBSOCKET_PORT = 8080; // Default WebSocket port
 
 let socket: WebSocket | null = null;
@@ -15,6 +16,14 @@ let reconnectTimeout: NodeJS.Timeout | null = null;
 
 let connectionStatus: ConnectionStatus = 'disconnected';
 let statusChangeCallback: (status: ConnectionStatus) => void = () => {};
+
+const defaultScoreSettings: ScoreSettings = {
+  headTap: 3,
+  headSwipe: 5,
+  bodyTap: 2,
+  bodySwipe: 4,
+  punch: 1,
+};
 
 const updateStatus = (newStatus: ConnectionStatus) => {
   if (connectionStatus !== newStatus) {
@@ -41,6 +50,11 @@ export function setRefereeID(id: Referee): void {
   refereeId = id;
   localStorage.setItem(ID_STORAGE_KEY, String(id));
 }
+
+export function saveScoreSettings(settings: ScoreSettings): void {
+  localStorage.setItem(SCORE_SETTINGS_KEY, JSON.stringify(settings));
+}
+
 
 export async function connectToServer(): Promise<void> {
   if (!serverIP) {
@@ -114,10 +128,20 @@ export function sendHeartbeat(): void {
   }
 }
 
-export async function loadSettings(): Promise<{ refereeId: Referee, serverIP: string } | null> {
+export async function loadSettings(): Promise<{ refereeId: Referee, serverIP: string, scoreSettings: ScoreSettings } | null> {
   try {
     const storedIp = localStorage.getItem(IP_STORAGE_KEY);
     const storedId = localStorage.getItem(ID_STORAGE_KEY);
+    const storedScoreSettings = localStorage.getItem(SCORE_SETTINGS_KEY);
+
+    let loadedScoreSettings = defaultScoreSettings;
+    if (storedScoreSettings) {
+      try {
+        loadedScoreSettings = { ...defaultScoreSettings, ...JSON.parse(storedScoreSettings) };
+      } catch (e) {
+        console.error("Failed to parse score settings, using default.", e);
+      }
+    }
 
     if (storedIp) {
       serverIP = storedIp;
@@ -128,7 +152,8 @@ export async function loadSettings(): Promise<{ refereeId: Referee, serverIP: st
 
     return {
       refereeId: refereeId || 1,
-      serverIP: serverIP || ''
+      serverIP: serverIP || '',
+      scoreSettings: loadedScoreSettings,
     };
   } catch (error) {
     console.error('Failed to load settings:', error);

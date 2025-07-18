@@ -4,6 +4,7 @@ import { useState, useRef } from 'react';
 import { cn } from '@/lib/utils';
 import React from 'react';
 import Image from 'next/image';
+import type { ScoreSettings } from '@/types';
 
 const RedHeadgearIcon = () => (
     <Image 
@@ -137,10 +138,12 @@ const ScoreButton = ({
 
 const PlayerZone = ({ 
   color, 
-  onScore 
+  onScore,
+  scoreSettings
 }: { 
   color: 'red' | 'blue', 
-  onScore: (target: 'red' | 'blue', points: number, action: string) => void 
+  onScore: (target: 'red' | 'blue', points: number, action: string) => void,
+  scoreSettings: ScoreSettings
 }) => {
   const bgColor = color === 'red' ? 'bg-[#E00000]' : 'bg-[#1262E2]';
   const HeadIcon = color === 'red' ? RedHeadgearIcon : BlueHeadgearIcon;
@@ -150,8 +153,8 @@ const PlayerZone = ({
     <div className={cn("flex-1 h-full flex flex-col", bgColor)}>
       <ScoreButton 
         icon={HeadIcon}
-        tapPoints={3}
-        swipePoints={5}
+        tapPoints={scoreSettings.headTap}
+        swipePoints={scoreSettings.headSwipe}
         tapAction="head_kick"
         swipeAction="head_turning_kick"
         onScore={(points, action) => onScore(color, points, action)}
@@ -160,8 +163,8 @@ const PlayerZone = ({
       <div className="w-full h-[2px] bg-black/50 self-center" />
       <ScoreButton 
         icon={BodyIcon}
-        tapPoints={2}
-        swipePoints={4}
+        tapPoints={scoreSettings.bodyTap}
+        swipePoints={scoreSettings.bodySwipe}
         tapAction="body_kick"
         swipeAction="body_turning_kick"
         onScore={(points, action) => onScore(color, points, action)}
@@ -171,15 +174,16 @@ const PlayerZone = ({
   )
 };
 
-const PunchButton = ({ onScore, target, className }: { 
+const PunchButton = ({ onScore, target, className, points }: { 
     onScore: (target: 'red' | 'blue', points: number, action: string) => void;
     target: 'red' | 'blue';
     className?: string;
+    points: number;
 }) => {
     const [isTapped, setIsTapped] = useState(false);
 
     const handleTap = () => {
-        onScore(target, 1, 'punch');
+        onScore(target, points, 'punch');
     };
 
     const handleInteractionStart = () => setIsTapped(true);
@@ -205,20 +209,25 @@ const PunchButton = ({ onScore, target, className }: {
     );
 };
 
-export default function RefereeScreen({ onScore }: { onScore: (target: 'red' | 'blue', points: number, action:string) => void }) {
+export default function RefereeScreen({ onScore, scoreSettings }: { 
+  onScore: (target: 'red' | 'blue', points: number, action:string) => void,
+  scoreSettings: ScoreSettings
+}) {
   return (
     <div className="relative flex h-full w-full flex-col md:flex-row overflow-hidden">
-      <PlayerZone color="red" onScore={onScore} />
-      <PlayerZone color="blue" onScore={onScore} />
+      <PlayerZone color="red" onScore={onScore} scoreSettings={scoreSettings} />
+      <PlayerZone color="blue" onScore={onScore} scoreSettings={scoreSettings} />
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-20 flex gap-4 md:gap-8">
         <PunchButton
           target="red"
           onScore={onScore}
+          points={scoreSettings.punch}
           className="bg-[#E00000]/80"
         />
         <PunchButton
           target="blue"
           onScore={onScore}
+          points={scoreSettings.punch}
           className="bg-[#1262E2]/80"
         />
       </div>
