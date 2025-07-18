@@ -49,7 +49,7 @@ const BlueTrunkIcon = () => (
     />
 );
 
-const PunchIcon = ({ color }: { color: 'red' | 'blue' }) => (
+const PunchIcon = () => (
   <svg
     width="48"
     height="48"
@@ -155,15 +155,6 @@ const PlayerZone = ({
   const bgColor = color === 'red' ? 'bg-[#E00000]' : 'bg-[#1262E2]';
   const HeadIcon = color === 'red' ? RedHeadgearIcon : BlueHeadgearIcon;
   const BodyIcon = color === 'red' ? RedTrunkIcon : BlueTrunkIcon;
-  const [isTapped, setIsTapped] = useState(false);
-
-  const handleTap = () => {
-    onScore(1, 'punch');
-  };
-
-  const handleInteractionStart = () => setIsTapped(true);
-  const handleInteractionEnd = () => setIsTapped(false);
-
 
   return (
     <div className={cn("relative flex-1 h-full flex flex-col", bgColor)}>
@@ -186,36 +177,59 @@ const PlayerZone = ({
         onScore={onScore}
         label={`Score body for ${color}`}
       />
-       <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-        <div
-          role="button"
-          aria-label={`Score punch for ${color}`}
-          onClick={handleTap}
-          onMouseDown={handleInteractionStart}
-          onMouseUp={handleInteractionEnd}
-          onTouchStart={handleInteractionStart}
-          onTouchEnd={handleInteractionEnd}
-          className={cn(
-            'pointer-events-auto cursor-pointer flex flex-col items-center justify-center bg-black/30 backdrop-blur-sm border-2 border-white/50 rounded-lg shadow-2xl transition-transform duration-100 ease-out w-32 h-32 md:w-36 md:h-36',
-            isTapped ? 'scale-95' : 'scale-100'
-          )}
-        >
-          <PunchIcon color={color} />
-          <span className="text-white font-semibold text-lg md:text-xl mt-1">
-            PUNCH: +1
-          </span>
-        </div>
-      </div>
     </div>
   )
+};
+
+const PunchButton = ({ onScore }: { onScore: (target: 'red' | 'blue', points: number, action: string) => void }) => {
+    const [isTapped, setIsTapped] = useState(false);
+    const buttonRef = useRef<HTMLDivElement>(null);
+
+    const handleTap = (e: React.MouseEvent<HTMLDivElement> | React.TouchEvent<HTMLDivElement>) => {
+        if (!buttonRef.current) return;
+        
+        const rect = buttonRef.current.getBoundingClientRect();
+        const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
+        
+        const isRedSide = clientX < rect.left + rect.width / 2;
+        const target = isRedSide ? 'red' : 'blue';
+        onScore(target, 1, 'punch');
+    };
+
+    const handleInteractionStart = () => setIsTapped(true);
+    const handleInteractionEnd = () => setIsTapped(false);
+
+    return (
+        <div
+            ref={buttonRef}
+            role="button"
+            aria-label="Score punch for red or blue"
+            onClick={handleTap}
+            onMouseDown={handleInteractionStart}
+            onMouseUp={handleInteractionEnd}
+            onTouchStart={handleInteractionStart}
+            onTouchEnd={handleInteractionEnd}
+            className={cn(
+                'absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10',
+                'cursor-pointer flex flex-col items-center justify-center bg-black/30 backdrop-blur-sm border-2 border-white/50 rounded-lg shadow-2xl transition-transform duration-100 ease-out w-32 h-32 md:w-36 md:h-36',
+                isTapped ? 'scale-95' : 'scale-100'
+            )}
+        >
+            <PunchIcon />
+            <span className="text-white font-semibold text-lg md:text-xl mt-1">
+                PUNCH: +1
+            </span>
+        </div>
+    );
 };
 
 
 export default function RefereeScreen({ onScore }: { onScore: (target: 'red' | 'blue', points: number, action:string) => void }) {
   return (
-    <div className="flex h-full w-full flex-col md:flex-row">
+    <div className="relative flex h-full w-full flex-col md:flex-row">
       <PlayerZone color="red" onScore={(points, action) => onScore('red', points, action)} />
       <PlayerZone color="blue" onScore={(points, action) => onScore('blue', points, action)} />
+      <PunchButton onScore={onScore} />
     </div>
   );
 }
