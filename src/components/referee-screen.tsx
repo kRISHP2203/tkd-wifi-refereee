@@ -214,7 +214,7 @@ export default function RefereeScreen({ onScore, scoreSettings }: {
   scoreSettings: ScoreSettings
 }) {
   return (
-    <div className="relative flex h-full w-full flex-col md:flex-row overflow-hidden">
+    <div className="relative flex h-full w-full flex-row overflow-hidden">
       <PlayerZone color="red" onScore={onScore} scoreSettings={scoreSettings} />
       <PlayerZone color="blue" onScore={onScore} scoreSettings={scoreSettings} />
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-20 flex gap-4 md:gap-8">
