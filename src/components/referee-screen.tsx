@@ -150,11 +150,14 @@ const PlayerZone = ({
   onScore 
 }: { 
   color: 'red' | 'blue', 
-  onScore: (points: number, action: string) => void 
+  onScore: (target: 'red' | 'blue', points: number, action: string) => void 
 }) => {
   const bgColor = color === 'red' ? 'bg-[#E00000]' : 'bg-[#1262E2]';
   const HeadIcon = color === 'red' ? RedHeadgearIcon : BlueHeadgearIcon;
   const BodyIcon = color === 'red' ? RedTrunkIcon : BlueTrunkIcon;
+  const positionClass = color === 'red' ? 'md:right-1/2 md:translate-x-1/2' : 'md:left-1/2 md:-translate-x-1/2';
+  const mobilePositionClass = color === 'red' ? 'right-0' : 'left-0';
+
 
   return (
     <div className={cn("relative flex-1 h-full flex flex-col", bgColor)}>
@@ -164,7 +167,7 @@ const PlayerZone = ({
         swipePoints={5}
         tapAction="head_kick"
         swipeAction="head_turning_kick"
-        onScore={onScore}
+        onScore={(points, action) => onScore(color, points, action)}
         label={`Score head for ${color}`}
       />
       <div className="w-4/5 h-[2px] bg-white/50 self-center" />
@@ -174,25 +177,32 @@ const PlayerZone = ({
         swipePoints={4}
         tapAction="body_kick"
         swipeAction="body_turning_kick"
-        onScore={onScore}
+        onScore={(points, action) => onScore(color, points, action)}
         label={`Score body for ${color}`}
+      />
+       <PunchButton 
+        target={color}
+        onScore={(target, points, action) => onScore(target, points, action)}
+        className={cn(
+            'absolute top-1/2 -translate-y-1/2 z-20',
+            'md:absolute',
+            positionClass,
+             // Mobile positioning
+             `max-md:absolute max-md:top-1/2 max-md:-translate-y-1/2 ${mobilePositionClass}`
+        )}
       />
     </div>
   )
 };
 
-const PunchButton = ({ onScore }: { onScore: (target: 'red' | 'blue', points: number, action: string) => void }) => {
+const PunchButton = ({ onScore, target, className }: { 
+    onScore: (target: 'red' | 'blue', points: number, action: string) => void;
+    target: 'red' | 'blue';
+    className?: string;
+}) => {
     const [isTapped, setIsTapped] = useState(false);
-    const buttonRef = useRef<HTMLDivElement>(null);
 
-    const handleTap = (e: React.MouseEvent<HTMLDivElement> | React.TouchEvent<HTMLDivElement>) => {
-        if (!buttonRef.current) return;
-        
-        const rect = buttonRef.current.getBoundingClientRect();
-        const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
-        
-        const isRedSide = clientX < rect.left + rect.width / 2;
-        const target = isRedSide ? 'red' : 'blue';
+    const handleTap = () => {
         onScore(target, 1, 'punch');
     };
 
@@ -201,18 +211,17 @@ const PunchButton = ({ onScore }: { onScore: (target: 'red' | 'blue', points: nu
 
     return (
         <div
-            ref={buttonRef}
             role="button"
-            aria-label="Score punch for red or blue"
+            aria-label={`Score punch for ${target}`}
             onClick={handleTap}
             onMouseDown={handleInteractionStart}
             onMouseUp={handleInteractionEnd}
             onTouchStart={handleInteractionStart}
             onTouchEnd={handleInteractionEnd}
             className={cn(
-                'absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10',
                 'cursor-pointer flex flex-col items-center justify-center bg-black/30 backdrop-blur-sm border-2 border-white/50 rounded-lg shadow-2xl transition-transform duration-100 ease-out w-32 h-32 md:w-36 md:h-36',
-                isTapped ? 'scale-95' : 'scale-100'
+                isTapped ? 'scale-95' : 'scale-100',
+                className
             )}
         >
             <PunchIcon />
@@ -223,13 +232,11 @@ const PunchButton = ({ onScore }: { onScore: (target: 'red' | 'blue', points: nu
     );
 };
 
-
 export default function RefereeScreen({ onScore }: { onScore: (target: 'red' | 'blue', points: number, action:string) => void }) {
   return (
-    <div className="relative flex h-full w-full flex-col md:flex-row">
-      <PlayerZone color="red" onScore={(points, action) => onScore('red', points, action)} />
-      <PlayerZone color="blue" onScore={(points, action) => onScore('blue', points, action)} />
-      <PunchButton onScore={onScore} />
+    <div className="relative flex h-full w-full flex-col md:flex-row overflow-hidden">
+      <PlayerZone color="red" onScore={onScore} />
+      <PlayerZone color="blue" onScore={onScore} />
     </div>
   );
 }
