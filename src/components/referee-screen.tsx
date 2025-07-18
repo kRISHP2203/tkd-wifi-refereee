@@ -4,7 +4,7 @@ import { useState, useRef } from 'react';
 import { cn } from '@/lib/utils';
 import React from 'react';
 import Image from 'next/image';
-import type { ScoreSettings } from '@/types';
+import type { ScoreSettings, ScorePayload } from '@/types';
 
 const RedHeadgearIcon = () => (
     <Image 
@@ -82,9 +82,9 @@ const ScoreButton = ({
   icon: React.ElementType,
   tapPoints: number,
   swipePoints: number,
-  tapAction: string,
-  swipeAction: string,
-  onScore: (points: number, action: string) => void,
+  tapAction: ScorePayload['action'],
+  swipeAction: ScorePayload['action'],
+  onScore: (points: number, action: ScorePayload['action']) => void,
   label: string
 }) => {
   const [isTapped, setIsTapped] = useState(false);
@@ -142,7 +142,7 @@ const PlayerZone = ({
   scoreSettings
 }: { 
   color: 'red' | 'blue', 
-  onScore: (target: 'red' | 'blue', points: number, action: string) => void,
+  onScore: (target: 'red' | 'blue', points: number, action: ScorePayload['action']) => void,
   scoreSettings: ScoreSettings
 }) => {
   const bgColor = color === 'red' ? 'bg-[#E00000]' : 'bg-[#1262E2]';
@@ -175,7 +175,7 @@ const PlayerZone = ({
 };
 
 const PunchButton = ({ onScore, target, className, points }: { 
-    onScore: (target: 'red' | 'blue', points: number, action: string) => void;
+    onScore: (target: 'red' | 'blue', points: number, action: ScorePayload['action']) => void;
     target: 'red' | 'blue';
     className?: string;
     points: number;
@@ -210,7 +210,7 @@ const PunchButton = ({ onScore, target, className, points }: {
 };
 
 export default function RefereeScreen({ onScore, scoreSettings }: { 
-  onScore: (target: 'red' | 'blue', points: number, action:string) => void,
+  onScore: (target: 'red' | 'blue', points: number, action: ScorePayload['action']) => void,
   scoreSettings: ScoreSettings
 }) {
   return (

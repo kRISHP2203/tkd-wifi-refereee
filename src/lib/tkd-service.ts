@@ -105,7 +105,10 @@ export async function connectToServer(): Promise<void> {
 export function sendScore(payload: ScorePayload): boolean {
   if (socket && socket.readyState === WebSocket.OPEN) {
     try {
-      socket.send(JSON.stringify({ ...payload, action: 'score' }));
+      // The `action` property is now part of the payload passed in.
+      // We default to 'score' if it's not provided, but the UI should determine the action.
+      const message = { ...payload, action: payload.action || 'score' };
+      socket.send(JSON.stringify(message));
       return true;
     } catch (error) {
       console.error('Failed to send score:', error);
@@ -120,7 +123,7 @@ export function sendScore(payload: ScorePayload): boolean {
 export function sendHeartbeat(): void {
   if (socket && socket.readyState === WebSocket.OPEN) {
      try {
-      const heartbeatPayload = { refereeId: refereeId, heartbeat: true };
+      const heartbeatPayload = { refereeId: refereeId, action: 'heartbeat', timestamp: Date.now() };
       socket.send(JSON.stringify(heartbeatPayload));
     } catch (error) {
       console.error('Failed to send heartbeat:', error);

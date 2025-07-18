@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from 'react';
-import type { Referee, ConnectionStatus, ScoreSettings } from '@/types';
+import type { Referee, ConnectionStatus, ScoreSettings, ScorePayload } from '@/types';
 import Header from '@/components/header';
 import RefereeScreen from '@/components/referee-screen';
 import SettingsPanel from '@/components/settings-panel';
@@ -54,8 +54,8 @@ export default function Home() {
     };
   }, [toast]);
 
-  const handleScore = (target: 'red' | 'blue', points: number, action: string) => {
-    const scoreData = {
+  const handleScore = (target: 'red' | 'blue', points: number, action: ScorePayload['action']) => {
+    const scoreData: ScorePayload = {
       refereeId: refereeId,
       action: action,
       points: points,
