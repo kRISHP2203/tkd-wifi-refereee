@@ -31,7 +31,7 @@ const nextConfig: NextConfig = {
         headers: [
           {
             key: 'Content-Security-Policy',
-            value: "frame-ancestors 'self' https://*.firebase.app https://*.web.app; upgrade-insecure-requests; connect-src 'self' wss: ws: https:;",
+            value: "frame-ancestors 'self' https://*.firebase.app https://*.web.app https://*.cloudworkstations.dev; upgrade-insecure-requests; connect-src 'self' wss: ws: https:;",
           },
         ],
       },
