@@ -83,11 +83,9 @@ const ScoreButton = ({
 
 const PlayerZone = ({ 
   color, 
-  name, 
   onScore 
 }: { 
   color: 'red' | 'blue', 
-  name: string, 
   onScore: (points: number, action: string) => void 
 }) => {
   const [tappedItem, setTappedItem] = useState<string | null>(null);
@@ -99,28 +97,26 @@ const PlayerZone = ({
   }
 
   return (
-    <div className={cn("flex-1 h-full flex flex-col justify-center items-center pt-6 md:pt-10", bgColor)}>
-       <div className="flex-1 w-full flex flex-col items-center justify-around">
-          <ScoreButton 
-            icon={HeadgearIcon}
-            points={3}
-            action="head_kick"
-            onScore={onScore}
-            isTapped={tappedItem === 'head'}
-            onTap={() => handleTap('head')}
-            label={`Score head for ${name}`}
-          />
-          <div className="w-4/5 h-[2px] bg-white/50" />
-          <ScoreButton 
-            icon={TrunkIcon}
-            points={2}
-            action="body_kick"
-            onScore={onScore}
-            isTapped={tappedItem === 'body'}
-            onTap={() => handleTap('body')}
-            label={`Score body for ${name}`}
-          />
-       </div>
+    <div className={cn("flex-1 h-full flex flex-col", bgColor)}>
+      <ScoreButton 
+        icon={HeadgearIcon}
+        points={3}
+        action="head_kick"
+        onScore={onScore}
+        isTapped={tappedItem === 'head'}
+        onTap={() => handleTap('head')}
+        label={`Score head for ${color}`}
+      />
+      <div className="w-4/5 h-[2px] bg-white/50 self-center" />
+      <ScoreButton 
+        icon={TrunkIcon}
+        points={2}
+        action="body_kick"
+        onScore={onScore}
+        isTapped={tappedItem === 'body'}
+        onTap={() => handleTap('body')}
+        label={`Score body for ${color}`}
+      />
     </div>
   )
 };
@@ -129,8 +125,8 @@ const PlayerZone = ({
 export default function RefereeScreen({ onScore }: { onScore: (target: 'red' | 'blue', points: number, action: string) => void }) {
   return (
     <div className="flex h-full w-full flex-col md:flex-row">
-      <PlayerZone color="red" name="Red" onScore={(points, action) => onScore('red', points, action)} />
-      <PlayerZone color="blue" name="Blue" onScore={(points, action) => onScore('blue', points, action)} />
+      <PlayerZone color="red" onScore={(points, action) => onScore('red', points, action)} />
+      <PlayerZone color="blue" onScore={(points, action) => onScore('blue', points, action)} />
     </div>
   );
 }
