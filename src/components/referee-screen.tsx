@@ -155,12 +155,9 @@ const PlayerZone = ({
   const bgColor = color === 'red' ? 'bg-[#E00000]' : 'bg-[#1262E2]';
   const HeadIcon = color === 'red' ? RedHeadgearIcon : BlueHeadgearIcon;
   const BodyIcon = color === 'red' ? RedTrunkIcon : BlueTrunkIcon;
-  const positionClass = color === 'red' ? 'md:right-1/2 md:translate-x-1/2' : 'md:left-1/2 md:-translate-x-1/2';
-  const mobilePositionClass = color === 'red' ? 'right-0' : 'left-0';
-
 
   return (
-    <div className={cn("relative flex-1 h-full flex flex-col", bgColor)}>
+    <div className={cn("flex-1 h-full flex flex-col", bgColor)}>
       <ScoreButton 
         icon={HeadIcon}
         tapPoints={3}
@@ -179,17 +176,6 @@ const PlayerZone = ({
         swipeAction="body_turning_kick"
         onScore={(points, action) => onScore(color, points, action)}
         label={`Score body for ${color}`}
-      />
-       <PunchButton 
-        target={color}
-        onScore={(target, points, action) => onScore(target, points, action)}
-        className={cn(
-            'absolute top-1/2 -translate-y-1/2 z-20',
-            'md:absolute',
-            positionClass,
-             // Mobile positioning
-             `max-md:absolute max-md:top-1/2 max-md:-translate-y-1/2 ${mobilePositionClass}`
-        )}
       />
     </div>
   )
@@ -237,6 +223,18 @@ export default function RefereeScreen({ onScore }: { onScore: (target: 'red' | '
     <div className="relative flex h-full w-full flex-col md:flex-row overflow-hidden">
       <PlayerZone color="red" onScore={onScore} />
       <PlayerZone color="blue" onScore={onScore} />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-20 flex gap-4 md:gap-8">
+        <PunchButton
+          target="red"
+          onScore={onScore}
+          className="bg-[#E00000]/80"
+        />
+        <PunchButton
+          target="blue"
+          onScore={onScore}
+          className="bg-[#1262E2]/80"
+        />
+      </div>
     </div>
   );
 }
