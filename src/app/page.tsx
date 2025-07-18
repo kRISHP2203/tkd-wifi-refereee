@@ -29,29 +29,29 @@ export default function Home() {
         setRefereeId(settings.refereeId as Referee);
         setServerIp(settings.serverIP);
         setScoreSettings(settings.scoreSettings);
-        if (settings.serverIP) {
-          TKDService.connectToServer();
-        }
+        // if (settings.serverIP) {
+        //   TKDService.connectToServer();
+        // }
       }
     }
     initialize();
 
-    const onStatusChange = (status: ConnectionStatus) => {
-      setConnectionStatus(status);
-      if (status === 'disconnected') {
-        toast({
-          variant: "destructive",
-          title: "Connection Lost",
-          description: "Disconnected from server. Please check connection and IP.",
-        });
-      }
-    };
+    // const onStatusChange = (status: ConnectionStatus) => {
+    //   setConnectionStatus(status);
+    //   if (status === 'disconnected') {
+    //     toast({
+    //       variant: "destructive",
+    //       title: "Connection Lost",
+    //       description: "Disconnected from server. Please check connection and IP.",
+    //     });
+    //   }
+    // };
 
-    TKDService.onServerConnectionChange(onStatusChange);
+    // TKDService.onServerConnectionChange(onStatusChange);
 
-    return () => {
-      TKDService.disconnectFromServer();
-    };
+    // return () => {
+    //   TKDService.disconnectFromServer();
+    // };
   }, [toast]);
 
   const handleScore = (target: 'red' | 'blue', points: number, action: ScorePayload['action']) => {

@@ -57,6 +57,10 @@ export function saveScoreSettings(settings: ScoreSettings): void {
 
 
 export async function connectToServer(): Promise<void> {
+  // Bypassing connection logic for now
+  console.log('Connection to server is currently disabled.');
+  return;
+
   if (!serverIP) {
     console.error('Server IP not set.');
     return;
