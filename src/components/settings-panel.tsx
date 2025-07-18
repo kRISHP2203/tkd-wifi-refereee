@@ -1,5 +1,6 @@
 "use client"
 
+import { useState } from "react";
 import {
   Sheet,
   SheetContent,
@@ -10,6 +11,7 @@ import {
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Separator } from "@/components/ui/separator";
 import type { Referee } from "@/types";
@@ -19,8 +21,8 @@ type SettingsPanelProps = {
   onOpenChange: (isOpen: boolean) => void;
   refereeId: Referee;
   onRefereeIdChange: (id: Referee) => void;
-  onSimulateConnectionLost: () => void;
-  onSimulateScoreFail: () => void;
+  serverIp: string;
+  onServerIpChange: (ip: string) => void;
 };
 
 export default function SettingsPanel({
@@ -28,9 +30,16 @@ export default function SettingsPanel({
   onOpenChange,
   refereeId,
   onRefereeIdChange,
-  onSimulateConnectionLost,
-  onSimulateScoreFail,
+  serverIp,
+  onServerIpChange,
 }: SettingsPanelProps) {
+  const [ipValue, setIpValue] = useState(serverIp);
+
+  const handleSave = () => {
+    onServerIpChange(ipValue);
+    onOpenChange(false);
+  };
+
   return (
     <Sheet open={isOpen} onOpenChange={onOpenChange}>
       <SheetContent>
@@ -61,20 +70,19 @@ export default function SettingsPanel({
           <Separator />
 
           <div>
-            <h3 className="text-base font-semibold mb-2">Debug Tools</h3>
-            <div className="space-y-2">
-                <p className="text-sm text-muted-foreground">These are for testing purposes.</p>
-                <Button variant="destructive" className="w-full" onClick={() => { onSimulateConnectionLost(); onOpenChange(false); }}>
-                    Simulate Connection Lost
-                </Button>
-                <Button variant="destructive" className="w-full" onClick={() => { onSimulateScoreFail(); onOpenChange(false); }}>
-                    Simulate Score Fail
-                </Button>
-            </div>
+            <Label htmlFor="server-ip" className="text-base font-semibold">Server IP Address</Label>
+            <p className="text-sm text-muted-foreground mb-2">Enter the IP address of the TKD WiFi Server.</p>
+            <Input 
+              id="server-ip"
+              value={ipValue}
+              onChange={(e) => setIpValue(e.target.value)}
+              placeholder="e.g., 192.168.0.101"
+            />
           </div>
         </div>
         <SheetFooter>
-          <Button onClick={() => onOpenChange(false)}>Close</Button>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
+          <Button onClick={handleSave}>Save & Connect</Button>
         </SheetFooter>
       </SheetContent>
     </Sheet>
