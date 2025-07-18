@@ -67,7 +67,7 @@ export async function connectToServer(): Promise<void> {
 
   clearTimeout(reconnectTimeout);
   
-  const url = `ws://${serverIP}:${WEBSOCKET_PORT}`;
+  const url = `wss://${serverIP}:${WEBSOCKET_PORT}`;
   console.log(`Connecting to ${url}...`);
   socket = new WebSocket(url);
 
@@ -180,7 +180,7 @@ export async function testServerConnection(): Promise<boolean> {
   if (!serverIP) return false;
   
   return new Promise((resolve) => {
-    const testSocket = new WebSocket(`ws://${serverIP}:${WEBSOCKET_PORT}`);
+    const testSocket = new WebSocket(`wss://${serverIP}:${WEBSOCKET_PORT}`);
     
     testSocket.onopen = () => {
       testSocket.close();
