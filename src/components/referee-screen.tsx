@@ -130,16 +130,6 @@ const ScoreButton = ({
     >
       <div className="flex flex-col items-center gap-2 text-white text-center p-2">
         <Icon />
-        <div className="flex flex-col items-center gap-2">
-          <div className="flex items-center gap-2 text-lg md:text-xl font-semibold">
-            <span className="font-light">TAP:</span>
-            <span>+{tapPoints}</span>
-          </div>
-          <div className="flex items-center gap-2 text-lg md:text-xl font-semibold">
-            <span className="font-light">SWIPE:</span>
-            <span>+{swipePoints}</span>
-          </div>
-        </div>
       </div>
     </div>
   )
@@ -211,9 +201,6 @@ const PunchButton = ({ onScore, target, className }: {
             )}
         >
             <PunchIcon />
-            <span className="text-white font-semibold text-lg md:text-xl mt-1">
-                PUNCH: +1
-            </span>
         </div>
     );
 };
