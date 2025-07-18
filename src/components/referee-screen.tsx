@@ -27,23 +27,15 @@ const BlueHeadgearIcon = () => (
     />
 );
 
-const TrunkIcon = ({ className }: { className?: string }) => (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className={cn("w-16 h-16 md:w-20 md:h-20", className)}
-    >
-      <path d="M12 4L4 8v10h16V8l-8-4z" />
-      <path d="M4 8l8 4 8-4" />
-      <path d="M12 12v10" />
-      <path d="M8 22V12" />
-      <path d="M16 22V12" />
-    </svg>
+const RedTrunkIcon = () => (
+    <Image 
+        src="https://placehold.co/80x80.png" 
+        alt="Red Taekwondo Trunk Protector" 
+        width={80} 
+        height={80} 
+        className="w-16 h-16 md:w-20 md:h-20"
+        data-ai-hint="taekwondo trunk"
+    />
 );
 
 const BlueTrunkIcon = () => (
@@ -143,7 +135,7 @@ const PlayerZone = ({
 }) => {
   const bgColor = color === 'red' ? 'bg-[#E00000]' : 'bg-[#1262E2]';
   const HeadIcon = color === 'red' ? RedHeadgearIcon : BlueHeadgearIcon;
-  const BodyIcon = color === 'blue' ? BlueTrunkIcon : TrunkIcon;
+  const BodyIcon = color === 'red' ? RedTrunkIcon : BlueTrunkIcon;
 
   return (
     <div className={cn("flex-1 h-full flex flex-col", bgColor)}>
