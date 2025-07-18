@@ -23,7 +23,7 @@ const BlueHeadgearIcon = () => (
         width={80} 
         height={80} 
         className="w-16 h-16 md:w-20 md:h-20"
-        data-ai-hint="taekwondo blue headguard"
+        data-ai-hint="taekwondo blue head guard"
     />
 );
 
@@ -218,7 +218,7 @@ export default function RefereeScreen({ onScore }: { onScore: (target: 'red' | '
         />
         <PunchButton
           target="blue"
-          onScore={onScore}
+          on-score={onScore}
           className="bg-[#1262E2]/80"
         />
       </div>
