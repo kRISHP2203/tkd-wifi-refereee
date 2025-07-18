@@ -53,6 +53,17 @@ const TrunkIcon = ({ className }: { className?: string }) => (
     </svg>
 );
 
+const BlueTrunkIcon = () => (
+    <Image 
+        src="https://placehold.co/80x80.png" 
+        alt="Blue Taekwondo Trunk Protector" 
+        width={80} 
+        height={80} 
+        className="w-16 h-16 md:w-20 md:h-20"
+        data-ai-hint="taekwondo trunk"
+    />
+);
+
 const ScoreButton = ({
   icon: Icon,
   tapPoints,
@@ -139,6 +150,7 @@ const PlayerZone = ({
 }) => {
   const bgColor = color === 'red' ? 'bg-[#E63946]' : 'bg-[#1262E2]';
   const HeadIcon = color === 'blue' ? BlueHeadgearIcon : HeadgearIcon;
+  const BodyIcon = color === 'blue' ? BlueTrunkIcon : TrunkIcon;
 
   return (
     <div className={cn("flex-1 h-full flex flex-col", bgColor)}>
@@ -153,7 +165,7 @@ const PlayerZone = ({
       />
       <div className="w-4/5 h-[2px] bg-white/50 self-center" />
       <ScoreButton 
-        icon={TrunkIcon}
+        icon={BodyIcon}
         tapPoints={2}
         swipePoints={4}
         tapAction="body_kick"
