@@ -23,17 +23,17 @@ const BlueHeadgearIcon = () => (
         width={80} 
         height={80} 
         className="w-16 h-16 md:w-20 md:h-20"
-        data-ai-hint="blue headguard"
+        data-ai-hint="taekwondo blue headguard"
     />
 );
 
 const RedTrunkIcon = () => (
     <Image 
-        src="https://placehold.co/80x80.png" 
+        src="https://images.unsplash.com/photo-1598177293891-ead2300b2caa?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwyMHx8dGFla3dvbmRvJTIwcmVkJTIwdHJ1bmt8ZW58MHx8fHwxNzUyODM0MzM0fDA&ixlib=rb-4.1.0&q=80&w=1080" 
         alt="Red Taekwondo Trunk Protector" 
         width={80} 
         height={80} 
-        className="w-16 h-16 md:w-20 md:h-20"
+        className="w-16 h-16 md:w-20 md:h-20 object-cover"
         data-ai-hint="red trunk"
     />
 );
