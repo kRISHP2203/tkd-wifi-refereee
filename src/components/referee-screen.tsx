@@ -3,7 +3,7 @@
 import { useState, useRef } from 'react';
 import { cn } from '@/lib/utils';
 import React from 'react';
-import { Shield, ArrowRight } from 'lucide-react';
+import Image from 'next/image';
 
 const HeadgearIcon = ({ className }: { className?: string }) => (
     <svg
@@ -21,6 +21,17 @@ const HeadgearIcon = ({ className }: { className?: string }) => (
       <path d="M20 12a8 8 0 1 0-16 0" />
       <path d="M17 17a5 5 0 0 0-10 0" />
     </svg>
+);
+
+const BlueHeadgearIcon = () => (
+    <Image 
+        src="https://placehold.co/80x80.png" 
+        alt="Blue Taekwondo Headgear" 
+        width={80} 
+        height={80} 
+        className="w-16 h-16 md:w-20 md:h-20"
+        data-ai-hint="taekwondo headgear"
+    />
 );
 
 const TrunkIcon = ({ className }: { className?: string }) => (
@@ -126,12 +137,13 @@ const PlayerZone = ({
   color: 'red' | 'blue', 
   onScore: (points: number, action: string) => void 
 }) => {
-  const bgColor = color === 'red' ? 'bg-[#E63946]' : 'bg-[#457B9D]';
+  const bgColor = color === 'red' ? 'bg-[#E63946]' : 'bg-[#1262E2]';
+  const HeadIcon = color === 'blue' ? BlueHeadgearIcon : HeadgearIcon;
 
   return (
     <div className={cn("flex-1 h-full flex flex-col", bgColor)}>
       <ScoreButton 
-        icon={HeadgearIcon}
+        icon={HeadIcon}
         tapPoints={3}
         swipePoints={5}
         tapAction="head_kick"
