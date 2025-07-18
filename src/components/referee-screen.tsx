@@ -7,11 +7,11 @@ import Image from 'next/image';
 
 const RedHeadgearIcon = () => (
     <Image 
-        src="https://placehold.co/80x80.png" 
+        src="https://images.unsplash.com/photo-1599831912445-3532ba3b5115?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHx0YWVrd29uZG8lMjByZWQlMjBoZWFkZ2VhcnxlbnwwfHx8fDE3NTI4MzQyOTB8MA&ixlib=rb-4.1.0&q=80&w=1080"
         alt="Red Taekwondo Headgear" 
         width={80} 
         height={80} 
-        className="w-16 h-16 md:w-20 md:h-20"
+        className="w-16 h-16 md:w-20 md:h-20 object-cover"
         data-ai-hint="red headgear"
     />
 );
