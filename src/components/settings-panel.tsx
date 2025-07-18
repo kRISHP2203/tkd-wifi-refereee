@@ -23,6 +23,8 @@ type SettingsPanelProps = {
   onRefereeIdChange: (id: Referee) => void;
   scoreSettings: ScoreSettings;
   onScoreSettingsChange: (settings: ScoreSettings) => void;
+  serverIp: string;
+  onServerIpChange: (ip: string) => void;
 };
 
 export default function SettingsPanel({
@@ -32,16 +34,24 @@ export default function SettingsPanel({
   onRefereeIdChange,
   scoreSettings,
   onScoreSettingsChange,
+  serverIp,
+  onServerIpChange,
 }: SettingsPanelProps) {
   const [localScoreSettings, setLocalScoreSettings] = useState(scoreSettings);
+  const [localServerIp, setLocalServerIp] = useState(serverIp);
 
   useEffect(() => {
     setLocalScoreSettings(scoreSettings);
   }, [scoreSettings]);
 
+  useEffect(() => {
+    setLocalServerIp(serverIp);
+  }, [serverIp]);
+
 
   const handleSave = () => {
     onScoreSettingsChange(localScoreSettings);
+    onServerIpChange(localServerIp);
     onOpenChange(false);
   };
 
@@ -62,6 +72,20 @@ export default function SettingsPanel({
           </SheetDescription>
         </SheetHeader>
         <div className="py-4 space-y-6">
+           <div>
+            <Label className="text-base font-semibold">Server IP Address</Label>
+            <p className="text-sm text-muted-foreground mb-4">Enter the IP of the TKD WiFi Server.</p>
+            <Input 
+              id="server-ip" 
+              type="text" 
+              value={localServerIp} 
+              onChange={e => setLocalServerIp(e.target.value)} 
+              placeholder="e.g., 192.168.1.100"
+            />
+          </div>
+
+          <Separator />
+          
           <div>
             <Label className="text-base font-semibold">Referee ID</Label>
             <p className="text-sm text-muted-foreground mb-4">Select your assigned referee number.</p>
@@ -110,7 +134,7 @@ export default function SettingsPanel({
         </div>
         <SheetFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-          <Button onClick={handleSave}>Save</Button>
+          <Button onClick={handleSave}>Save & Reconnect</Button>
         </SheetFooter>
       </SheetContent>
     </Sheet>
