@@ -99,8 +99,7 @@ const PlayerZone = ({
   }
 
   return (
-    <div className={cn("flex-1 h-full flex flex-col justify-center items-center", bgColor)}>
-       <h2 className="text-4xl md:text-6xl font-bold uppercase tracking-widest font-headline text-white pt-6 md:pt-10">{name}</h2>
+    <div className={cn("flex-1 h-full flex flex-col justify-center items-center pt-6 md:pt-10", bgColor)}>
        <div className="flex-1 w-full flex flex-col items-center justify-around">
           <ScoreButton 
             icon={HeadgearIcon}
