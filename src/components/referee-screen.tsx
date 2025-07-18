@@ -5,22 +5,15 @@ import { cn } from '@/lib/utils';
 import React from 'react';
 import Image from 'next/image';
 
-const HeadgearIcon = ({ className }: { className?: string }) => (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className={cn("w-16 h-16 md:w-20 md:h-20", className)}
-    >
-      <path d="M14.5 9.5a2.5 2.5 0 1 0-5 0" />
-      <path d="M12 12a5 5 0 0 1 5 5H7a5 5 0 0 1 5-5z" />
-      <path d="M20 12a8 8 0 1 0-16 0" />
-      <path d="M17 17a5 5 0 0 0-10 0" />
-    </svg>
+const RedHeadgearIcon = () => (
+    <Image 
+        src="https://placehold.co/80x80.png" 
+        alt="Red Taekwondo Headgear" 
+        width={80} 
+        height={80} 
+        className="w-16 h-16 md:w-20 md:h-20"
+        data-ai-hint="taekwondo headgear"
+    />
 );
 
 const BlueHeadgearIcon = () => (
@@ -148,8 +141,8 @@ const PlayerZone = ({
   color: 'red' | 'blue', 
   onScore: (points: number, action: string) => void 
 }) => {
-  const bgColor = color === 'red' ? 'bg-[#E63946]' : 'bg-[#1262E2]';
-  const HeadIcon = color === 'blue' ? BlueHeadgearIcon : HeadgearIcon;
+  const bgColor = color === 'red' ? 'bg-[#E00000]' : 'bg-[#1262E2]';
+  const HeadIcon = color === 'red' ? RedHeadgearIcon : BlueHeadgearIcon;
   const BodyIcon = color === 'blue' ? BlueTrunkIcon : TrunkIcon;
 
   return (
