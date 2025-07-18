@@ -118,7 +118,7 @@ const ScoreButton = ({
   return (
     <div 
       className={cn(
-        "flex-1 w-full flex justify-center items-center cursor-pointer select-none transition-transform duration-100 ease-out",
+        "flex-1 w-full flex justify-center items-center cursor-pointer select-none transition-transform duration-100 ease-out border-2 border-black/50",
         isTapped ? 'scale-[0.98] bg-white/20' : 'scale-100'
       )}
       onTouchStart={(e) => handleInteractionStart(e.touches[0].clientX, e.touches[0].clientY)}
@@ -157,7 +157,7 @@ const PlayerZone = ({
         onScore={(points, action) => onScore(color, points, action)}
         label={`Score head for ${color}`}
       />
-      <div className="w-4/5 h-[2px] bg-white/50 self-center" />
+      <div className="w-full h-[2px] bg-black/50 self-center" />
       <ScoreButton 
         icon={BodyIcon}
         tapPoints={2}
