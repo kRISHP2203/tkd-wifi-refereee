@@ -24,6 +24,19 @@ const nextConfig: NextConfig = {
       }
     ],
   },
+  async headers() {
+    return [
+      {
+        source: '/(.*)',
+        headers: [
+          {
+            key: 'Content-Security-Policy',
+            value: "frame-ancestors 'self' https://*.firebase.app https://*.web.app; upgrade-insecure-requests; connect-src 'self' wss: ws: https:;",
+          },
+        ],
+      },
+    ];
+  },
 };
 
 export default nextConfig;
