@@ -49,6 +49,26 @@ const BlueTrunkIcon = () => (
     />
 );
 
+const PunchIcon = ({ color }: { color: 'red' | 'blue' }) => (
+  <svg
+    width="48"
+    height="48"
+    viewBox="0 0 24 24"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    className="w-10 h-10 md:w-12 md:h-12"
+  >
+    <path
+      d="M14 13.0641V14.5C14 15.8807 12.8807 17 11.5 17C10.1193 17 9 15.8807 9 14.5V12.0002C9 10.3433 10.3431 9.00021 12 9.00021C12.9622 9.00021 13.8222 9.53123 14.3218 10.3335M18.5 10.5C18.5 8.29086 16.7091 6.5 14.5 6.5C12.2909 6.5 10.5 8.29086 10.5 10.5V15.5C10.5 16.8807 11.6193 18 13 18C14.3807 18 15.5 16.8807 15.5 15.5V13.0641C16.929 12.5638 18.0001 11.233 18.0001 9.66675C18.0001 9.42857 17.9822 9.19502 17.9481 8.96693"
+      stroke="white"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </svg>
+);
+
+
 const ScoreButton = ({
   icon: Icon,
   tapPoints,
@@ -86,10 +106,9 @@ const ScoreButton = ({
     const dt = touchEnd.time - start.time;
     const distance = Math.sqrt(dx * dx + dy * dy);
 
-    // Swipe detection: moved more than 50px in less than 500ms
     if (dt < 500 && distance > 50) {
       onScore(swipePoints, swipeAction);
-    } else { // Tap detection
+    } else { 
       onScore(tapPoints, tapAction);
     }
 
@@ -136,9 +155,18 @@ const PlayerZone = ({
   const bgColor = color === 'red' ? 'bg-[#E00000]' : 'bg-[#1262E2]';
   const HeadIcon = color === 'red' ? RedHeadgearIcon : BlueHeadgearIcon;
   const BodyIcon = color === 'red' ? RedTrunkIcon : BlueTrunkIcon;
+  const [isTapped, setIsTapped] = useState(false);
+
+  const handleTap = () => {
+    onScore(1, 'punch');
+  };
+
+  const handleInteractionStart = () => setIsTapped(true);
+  const handleInteractionEnd = () => setIsTapped(false);
+
 
   return (
-    <div className={cn("flex-1 h-full flex flex-col", bgColor)}>
+    <div className={cn("relative flex-1 h-full flex flex-col", bgColor)}>
       <ScoreButton 
         icon={HeadIcon}
         tapPoints={3}
@@ -158,12 +186,32 @@ const PlayerZone = ({
         onScore={onScore}
         label={`Score body for ${color}`}
       />
+       <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+        <div
+          role="button"
+          aria-label={`Score punch for ${color}`}
+          onClick={handleTap}
+          onMouseDown={handleInteractionStart}
+          onMouseUp={handleInteractionEnd}
+          onTouchStart={handleInteractionStart}
+          onTouchEnd={handleInteractionEnd}
+          className={cn(
+            'pointer-events-auto cursor-pointer flex flex-col items-center justify-center bg-black/30 backdrop-blur-sm border-2 border-white/50 rounded-lg shadow-2xl transition-transform duration-100 ease-out w-32 h-32 md:w-36 md:h-36',
+            isTapped ? 'scale-95' : 'scale-100'
+          )}
+        >
+          <PunchIcon color={color} />
+          <span className="text-white font-semibold text-lg md:text-xl mt-1">
+            PUNCH: +1
+          </span>
+        </div>
+      </div>
     </div>
   )
 };
 
 
-export default function RefereeScreen({ onScore }: { onScore: (target: 'red' | 'blue', points: number, action: string) => void }) {
+export default function RefereeScreen({ onScore }: { onScore: (target: 'red' | 'blue', points: number, action:string) => void }) {
   return (
     <div className="flex h-full w-full flex-col md:flex-row">
       <PlayerZone color="red" onScore={(points, action) => onScore('red', points, action)} />
