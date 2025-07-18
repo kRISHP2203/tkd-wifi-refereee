@@ -10,7 +10,6 @@ import * as TKDService from '@/lib/tkd-service';
 
 export default function Home() {
   const [refereeId, setRefereeId] = useState<Referee>(1);
-  const [serverIp, setServerIp] = useState('');
   const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>('disconnected');
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [scoreSettings, setScoreSettings] = useState<ScoreSettings>({
@@ -27,31 +26,11 @@ export default function Home() {
       const settings = await TKDService.loadSettings();
       if (settings) {
         setRefereeId(settings.refereeId as Referee);
-        setServerIp(settings.serverIP);
         setScoreSettings(settings.scoreSettings);
-        // if (settings.serverIP) {
-        //   TKDService.connectToServer();
-        // }
       }
     }
     initialize();
 
-    // const onStatusChange = (status: ConnectionStatus) => {
-    //   setConnectionStatus(status);
-    //   if (status === 'disconnected') {
-    //     toast({
-    //       variant: "destructive",
-    //       title: "Connection Lost",
-    //       description: "Disconnected from server. Please check connection and IP.",
-    //     });
-    //   }
-    // };
-
-    // TKDService.onServerConnectionChange(onStatusChange);
-
-    // return () => {
-    //   TKDService.disconnectFromServer();
-    // };
   }, [toast]);
 
   const handleScore = (target: 'red' | 'blue', points: number, action: ScorePayload['action']) => {
@@ -80,20 +59,6 @@ export default function Home() {
     TKDService.setRefereeID(id);
   }
 
-  const handleServerIpChange = (ip: string) => {
-    setServerIp(ip);
-    if (TKDService.setServerIP(ip)) {
-      TKDService.disconnectFromServer();
-      TKDService.connectToServer();
-    } else {
-       toast({
-        variant: "destructive",
-        title: "Invalid IP Address",
-        description: "Please enter a valid IPv4 address.",
-      });
-    }
-  }
-
   const handleScoreSettingsChange = (newSettings: ScoreSettings) => {
     setScoreSettings(newSettings);
     TKDService.saveScoreSettings(newSettings);
@@ -113,8 +78,6 @@ export default function Home() {
         onOpenChange={setIsSettingsOpen}
         refereeId={refereeId}
         onRefereeIdChange={handleRefereeIdChange}
-        serverIp={serverIp}
-        onServerIpChange={handleServerIpChange}
         scoreSettings={scoreSettings}
         onScoreSettingsChange={handleScoreSettingsChange}
       />

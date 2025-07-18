@@ -21,8 +21,6 @@ type SettingsPanelProps = {
   onOpenChange: (isOpen: boolean) => void;
   refereeId: Referee;
   onRefereeIdChange: (id: Referee) => void;
-  serverIp: string;
-  onServerIpChange: (ip: string) => void;
   scoreSettings: ScoreSettings;
   onScoreSettingsChange: (settings: ScoreSettings) => void;
 };
@@ -32,17 +30,10 @@ export default function SettingsPanel({
   onOpenChange,
   refereeId,
   onRefereeIdChange,
-  serverIp,
-  onServerIpChange,
   scoreSettings,
   onScoreSettingsChange,
 }: SettingsPanelProps) {
-  const [ipValue, setIpValue] = useState(serverIp);
   const [localScoreSettings, setLocalScoreSettings] = useState(scoreSettings);
-
-  useEffect(() => {
-    setIpValue(serverIp);
-  }, [serverIp]);
 
   useEffect(() => {
     setLocalScoreSettings(scoreSettings);
@@ -50,7 +41,6 @@ export default function SettingsPanel({
 
 
   const handleSave = () => {
-    onServerIpChange(ipValue);
     onScoreSettingsChange(localScoreSettings);
     onOpenChange(false);
   };
@@ -90,19 +80,6 @@ export default function SettingsPanel({
           </div>
           
           <Separator />
-
-          <div>
-            <Label htmlFor="server-ip" className="text-base font-semibold">Server IP Address</Label>
-            <p className="text-sm text-muted-foreground mb-2">Enter the IP address of the TKD WiFi Server.</p>
-            <Input 
-              id="server-ip"
-              value={ipValue}
-              onChange={(e) => setIpValue(e.target.value)}
-              placeholder="e.g., 192.168.0.101"
-            />
-          </div>
-
-          <Separator />
           
           <div>
             <Label className="text-base font-semibold">Scoring Settings</Label>
@@ -133,7 +110,7 @@ export default function SettingsPanel({
         </div>
         <SheetFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-          <Button onClick={handleSave}>Save & Connect</Button>
+          <Button onClick={handleSave}>Save</Button>
         </SheetFooter>
       </SheetContent>
     </Sheet>

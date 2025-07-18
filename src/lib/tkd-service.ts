@@ -3,7 +3,6 @@
 
 import type { Referee, ConnectionStatus, ScorePayload, ScoreSettings } from '@/types';
 
-const IP_STORAGE_KEY = 'TKD_SERVER_IP';
 const ID_STORAGE_KEY = 'TKD_REFEREE_ID';
 const SCORE_SETTINGS_KEY = 'TKD_SCORE_SETTINGS';
 const WEBSOCKET_PORT = 8080; // Default WebSocket port
@@ -31,20 +30,6 @@ const updateStatus = (newStatus: ConnectionStatus) => {
     statusChangeCallback(newStatus);
   }
 };
-
-const isValidIPv4 = (ip: string) => {
-  const regex = /^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
-  return regex.test(ip);
-};
-
-export function setServerIP(ip: string): boolean {
-  if (isValidIPv4(ip)) {
-    serverIP = ip;
-    localStorage.setItem(IP_STORAGE_KEY, ip);
-    return true;
-  }
-  return false;
-}
 
 export function setRefereeID(id: Referee): void {
   refereeId = id;
@@ -109,8 +94,6 @@ export async function connectToServer(): Promise<void> {
 export function sendScore(payload: ScorePayload): boolean {
   if (socket && socket.readyState === WebSocket.OPEN) {
     try {
-      // The `action` property is now part of the payload passed in.
-      // We default to 'score' if it's not provided, but the UI should determine the action.
       const message = { ...payload, action: payload.action || 'score' };
       socket.send(JSON.stringify(message));
       return true;
@@ -135,9 +118,8 @@ export function sendHeartbeat(): void {
   }
 }
 
-export async function loadSettings(): Promise<{ refereeId: Referee, serverIP: string, scoreSettings: ScoreSettings } | null> {
+export async function loadSettings(): Promise<{ refereeId: Referee, scoreSettings: ScoreSettings } | null> {
   try {
-    const storedIp = localStorage.getItem(IP_STORAGE_KEY);
     const storedId = localStorage.getItem(ID_STORAGE_KEY);
     const storedScoreSettings = localStorage.getItem(SCORE_SETTINGS_KEY);
 
@@ -150,16 +132,12 @@ export async function loadSettings(): Promise<{ refereeId: Referee, serverIP: st
       }
     }
 
-    if (storedIp) {
-      serverIP = storedIp;
-    }
     if (storedId) {
       refereeId = Number(storedId) as Referee;
     }
 
     return {
       refereeId: refereeId || 1,
-      serverIP: serverIP || '',
       scoreSettings: loadedScoreSettings,
     };
   } catch (error) {
