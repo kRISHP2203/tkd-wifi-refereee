@@ -12,7 +12,7 @@ const RedHeadgearIcon = () => (
         width={80} 
         height={80} 
         className="w-16 h-16 md:w-20 md:h-20"
-        data-ai-hint="taekwondo headgear"
+        data-ai-hint="red headgear"
     />
 );
 
@@ -23,7 +23,7 @@ const BlueHeadgearIcon = () => (
         width={80} 
         height={80} 
         className="w-16 h-16 md:w-20 md:h-20"
-        data-ai-hint="taekwondo headgear"
+        data-ai-hint="blue headguard"
     />
 );
 
@@ -34,7 +34,7 @@ const RedTrunkIcon = () => (
         width={80} 
         height={80} 
         className="w-16 h-16 md:w-20 md:h-20"
-        data-ai-hint="taekwondo trunk"
+        data-ai-hint="red trunk"
     />
 );
 
@@ -45,7 +45,7 @@ const BlueTrunkIcon = () => (
         width={80} 
         height={80} 
         className="w-16 h-16 md:w-20 md:h-20"
-        data-ai-hint="taekwondo trunk"
+        data-ai-hint="blue trunk"
     />
 );
 
