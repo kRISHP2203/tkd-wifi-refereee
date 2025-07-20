@@ -74,7 +74,7 @@ export function connectToServer(ipAddress: string): void {
 
   clearTimeout(reconnectTimeout);
 
-  const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
+  const protocol = 'ws';
   const url = `${protocol}://${serverIP}:${WEBSOCKET_PORT}`;
   console.log(`Connecting to ${url}...`);
   socket = new WebSocket(url);
@@ -112,15 +112,15 @@ function handleConnectionEvents() {
     try {
       const message: ServerMessage = JSON.parse(event.data);
       
-      if (message.type === 'pong') {
+      if (message.action === 'pong') {
         if (lagTimeout) clearTimeout(lagTimeout);
-        // If we were lagging, we are now connected
         if (connectionStatus === 'lagging' || connectionStatus === 'disconnected') {
            updateStatus('connected');
         }
-      } else if (message.type === 'score_ack') {
-        // This will be handled in the next step
+      } else if (message.action === 'score_ack') {
         console.log(`Score acknowledged for ${message.target}`);
+      } else {
+        console.log('Received broadcasted action:', message);
       }
     } catch (e) {
       console.error('Failed to parse server message:', event.data, e);
@@ -145,12 +145,11 @@ export function sendScore(payload: ScoreData): boolean {
   if (socket && socket.readyState === WebSocket.OPEN) {
     try {
       const message: ClientMessage = { 
-        type: 'score',
         refereeId: refereeId,
-        payload: {
-          ...payload,
-          timestamp: Date.now() 
-        }
+        action: payload.action,
+        points: payload.points,
+        target: payload.target,
+        timestamp: Date.now() 
       };
       socket.send(JSON.stringify(message));
       return true;
@@ -167,14 +166,13 @@ export function sendScore(payload: ScoreData): boolean {
 export function sendHeartbeat(): void {
   if (socket && socket.readyState === WebSocket.OPEN) {
      try {
-      const message: ClientMessage = { 
-        type: 'ping',
+      const message = { 
+        action: 'heartbeat',
         refereeId: refereeId,
-        payload: { timestamp: Date.now() }
+        timestamp: Date.now() 
       };
       socket.send(JSON.stringify(message));
 
-      // Expect a pong within the lag threshold
       if (lagTimeout) clearTimeout(lagTimeout);
       lagTimeout = setTimeout(() => {
         updateStatus('lagging');

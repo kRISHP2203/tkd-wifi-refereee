@@ -54,6 +54,7 @@ export default function Home() {
     const scoreData: ScoreData = {
       points: points,
       target: target,
+      action: 'score', // As per new spec
     };
     
     const sent = TKDService.sendScore(scoreData);

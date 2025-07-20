@@ -1,42 +1,30 @@
 export type Referee = 1 | 2 | 3;
 export type ConnectionStatus = 'connected' | 'lagging' | 'disconnected';
 
-// Data sent from client to server
+// Base data for a scoring action
 export type ScoreData = {
   points: number;
   target: 'red' | 'blue';
+  action: 'score' | 'penalty';
 };
 
-export type ScorePayload = ScoreData & {
-  timestamp: number;
-}
-
-type PingPayload = {
-  timestamp: number;
-}
-
+// Message format sent from client (referee app) to server
 export type ClientMessage = {
   refereeId: Referee;
-} & (
-  | { type: 'score'; payload: ScorePayload }
-  | { type: 'ping'; payload: PingPayload }
-)
-
-// Data sent from server to client
-type PongMessage = {
-  type: 'pong';
+  action: 'score' | 'penalty' | 'heartbeat';
+  points?: number;
+  target?: 'red' | 'blue';
   timestamp: number;
 };
 
-type ScoreAckMessage = {
-  type: 'score_ack';
-  refereeId: Referee;
-  target: 'red' | 'blue';
-  timestamp: number;
+// Message format received by client from server
+export type ServerMessage = {
+  action: 'pong' | 'score_ack' | 'score' | 'penalty';
+  refereeId?: Referee;
+  points?: number;
+  target?: 'red' | 'blue';
+  timestamp?: number;
 };
-
-export type ServerMessage = PongMessage | ScoreAckMessage;
-
 
 export type ScoreSettings = {
   headTap: number;
