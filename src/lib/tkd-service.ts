@@ -1,16 +1,19 @@
 'use client';
 
-import type { Referee, ConnectionStatus, ScorePayload, ScoreSettings } from '@/types';
+import type { Referee, ConnectionStatus, ScoreSettings, ClientMessage, ServerMessage, ScoreData } from '@/types';
 
 const ID_STORAGE_KEY = 'TKD_REFEREE_ID';
 const IP_STORAGE_KEY = 'TKD_SERVER_IP';
 const SCORE_SETTINGS_KEY = 'TKD_SCORE_SETTINGS';
 const WEBSOCKET_PORT = 8080;
+const HEARTBEAT_INTERVAL = 5000; // 5 seconds
+const LAG_THRESHOLD = 2000; // 2 seconds
 
 let socket: WebSocket | null = null;
 let serverIP: string | null = null;
 let refereeId: Referee = 1;
 let heartbeatInterval: NodeJS.Timeout | null = null;
+let lagTimeout: NodeJS.Timeout | null = null;
 let reconnectTimeout: NodeJS.Timeout | null = null;
 let connectionAttempt = 0;
 
@@ -88,13 +91,14 @@ function handleConnectionEvents() {
     connectionAttempt = 0; 
     sendHeartbeat(); 
     if (heartbeatInterval) clearInterval(heartbeatInterval);
-    heartbeatInterval = setInterval(sendHeartbeat, 5000);
+    heartbeatInterval = setInterval(sendHeartbeat, HEARTBEAT_INTERVAL);
   };
 
   socket.onclose = () => {
     console.log('Disconnected from server.');
     updateStatus('disconnected');
     if (heartbeatInterval) clearInterval(heartbeatInterval);
+    if (lagTimeout) clearTimeout(lagTimeout);
     reconnectIfDropped();
   };
 
@@ -105,19 +109,28 @@ function handleConnectionEvents() {
   };
 
   socket.onmessage = (event) => {
-    // Lag detection could be implemented here based on heartbeat responses
-    console.log('Message from server:', event.data);
-    if (connectionStatus === 'disconnected') {
-      updateStatus('connected');
+    try {
+      const message: ServerMessage = JSON.parse(event.data);
+      
+      if (message.type === 'pong') {
+        if (lagTimeout) clearTimeout(lagTimeout);
+        // If we were lagging, we are now connected
+        if (connectionStatus === 'lagging' || connectionStatus === 'disconnected') {
+           updateStatus('connected');
+        }
+      } else if (message.type === 'score_ack') {
+        // This will be handled in the next step
+        console.log(`Score acknowledged for ${message.target}`);
+      }
+    } catch (e) {
+      console.error('Failed to parse server message:', event.data, e);
     }
-    // Set status to 'lagging' if heartbeat response is slow, then back to 'connected'
   };
 }
 
 function reconnectIfDropped() {
   if (!serverIP) return;
   
-  // Exponential backoff
   const delay = Math.pow(2, connectionAttempt) * 1000;
   console.log(`Attempting to reconnect in ${delay / 1000} seconds...`);
   
@@ -128,14 +141,16 @@ function reconnectIfDropped() {
 }
 
 
-export function sendScore(payload: Omit<ScorePayload, 'refereeId' | 'action' | 'timestamp'>): boolean {
+export function sendScore(payload: ScoreData): boolean {
   if (socket && socket.readyState === WebSocket.OPEN) {
     try {
-      const message: ScorePayload = { 
-        ...payload, 
-        refereeId: refereeId, 
-        action: 'score', 
-        timestamp: Date.now() 
+      const message: ClientMessage = { 
+        type: 'score',
+        refereeId: refereeId,
+        payload: {
+          ...payload,
+          timestamp: Date.now() 
+        }
       };
       socket.send(JSON.stringify(message));
       return true;
@@ -152,8 +167,19 @@ export function sendScore(payload: Omit<ScorePayload, 'refereeId' | 'action' | '
 export function sendHeartbeat(): void {
   if (socket && socket.readyState === WebSocket.OPEN) {
      try {
-      const heartbeatPayload = { refereeId: refereeId, action: 'heartbeat', timestamp: Date.now() };
-      socket.send(JSON.stringify(heartbeatPayload));
+      const message: ClientMessage = { 
+        type: 'ping',
+        refereeId: refereeId,
+        payload: { timestamp: Date.now() }
+      };
+      socket.send(JSON.stringify(message));
+
+      // Expect a pong within the lag threshold
+      if (lagTimeout) clearTimeout(lagTimeout);
+      lagTimeout = setTimeout(() => {
+        updateStatus('lagging');
+      }, LAG_THRESHOLD);
+
     } catch (error) {
       console.error('Failed to send heartbeat:', error);
       updateStatus('lagging');
@@ -203,8 +229,10 @@ export function disconnectFromServer(): void {
   console.log('Disconnecting from server...');
   clearTimeout(reconnectTimeout);
   if (heartbeatInterval) clearInterval(heartbeatInterval);
+  if (lagTimeout) clearTimeout(lagTimeout);
+
   if (socket) {
-    socket.onclose = null;
+    socket.onclose = null; // Prevent reconnect logic from firing on manual disconnect
     socket.close();
     socket = null;
   }

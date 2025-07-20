@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from 'react';
-import type { Referee, ConnectionStatus, ScoreSettings, ScorePayload } from '@/types';
+import type { Referee, ConnectionStatus, ScoreSettings, ScoreData } from '@/types';
 import Header from '@/components/header';
 import RefereeScreen from '@/components/referee-screen';
 import SettingsPanel from '@/components/settings-panel';
@@ -51,8 +51,7 @@ export default function Home() {
   }, []);
 
   const handleScore = (target: 'red' | 'blue', points: number) => {
-    const scoreData = {
-      refereeId: refereeId,
+    const scoreData: ScoreData = {
       points: points,
       target: target,
     };
@@ -102,7 +101,7 @@ export default function Home() {
           <AlertTitle>Disconnected from server</AlertTitle>
           <AlertDescription>
             Please check your connection or server IP in settings.
-          </AlertDescription>
+          </Description>
         </Alert>
       )}
       <main className="flex-1">
