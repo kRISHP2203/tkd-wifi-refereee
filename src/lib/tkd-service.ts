@@ -8,8 +8,11 @@ const IP_STORAGE_KEY = 'TKD_SERVER_IP';
 const PORT_STORAGE_KEY = 'TKD_SERVER_PORT';
 const SCORE_SETTINGS_KEY = 'TKD_SCORE_SETTINGS';
 const DEFAULT_PORT = 8080;
-const HEARTBEAT_INTERVAL = 5000; // 5 seconds
-const LAG_THRESHOLD = 2000; // 2 seconds
+const HEARTBEAT_INTERVAL_MS = 5000;
+const LAG_THRESHOLD_MS = 2000;
+const MAX_RECONNECT_ATTEMPTS = 5;
+const INITIAL_RECONNECT_DELAY_MS = 1000;
+
 
 let socket: WebSocket | null = null;
 let serverIP: string | null = null;
@@ -18,7 +21,7 @@ let refereeId: Referee = 1;
 let heartbeatInterval: NodeJS.Timeout | null = null;
 let lagTimeout: NodeJS.Timeout | null = null;
 let reconnectTimeout: NodeJS.Timeout | null = null;
-let connectionAttempt = 0;
+let reconnectAttempts = 0;
 
 let connectionStatus: ConnectionStatus = 'disconnected';
 let statusChangeCallback: (status: ConnectionStatus) => void = () => {};
@@ -39,6 +42,15 @@ const updateStatus = (newStatus: ConnectionStatus) => {
     }
   }
 };
+
+function cleanupTimers() {
+    if (heartbeatInterval) clearInterval(heartbeatInterval);
+    if (lagTimeout) clearTimeout(lagTimeout);
+    if (reconnectTimeout) clearTimeout(reconnectTimeout);
+    heartbeatInterval = null;
+    lagTimeout = null;
+    reconnectTimeout = null;
+}
 
 export function onServerConnectionChange(cb: (status: ConnectionStatus) => void): void {
   statusChangeCallback = cb;
@@ -63,8 +75,17 @@ export function saveScoreSettings(settings: ScoreSettings): void {
 export function connectToServer(ipAddress: string, port: number): void {
   if (typeof window === 'undefined') return;
 
+  // If already connected or attempting to connect, do nothing.
+  if (socket && (socket.readyState === WebSocket.OPEN || socket.readyState === WebSocket.CONNECTING)) {
+      console.log('WebSocket is already open or connecting.');
+      return;
+  }
+
+  // Clear any pending reconnection attempts before starting a new manual one.
+  if (reconnectTimeout) clearTimeout(reconnectTimeout);
+  
   if (!ipAddress) {
-    console.log('IP address is empty, disconnecting.');
+    console.log('IP address is empty, ensuring disconnection.');
     disconnectFromServer();
     return;
   }
@@ -76,49 +97,58 @@ export function connectToServer(ipAddress: string, port: number): void {
   const protocol = isSecure ? 'wss' : 'ws';
   const url = `${protocol}://${serverIP}:${serverPort}`;
   
-  if (socket && (socket.readyState === WebSocket.OPEN || socket.readyState === WebSocket.CONNECTING)) {
-    if (socket.url === url) {
-      console.log('Already connected or connecting to this address.');
-      return;
-    }
-    disconnectFromServer();
-  }
-
-  clearTimeout(reconnectTimeout);
-  console.log(`Connecting to ${url}...`);
-  socket = new WebSocket(url);
+  console.log(`Attempting to connect to ${url}...`);
   
-  handleConnectionEvents();
+  try {
+    socket = new WebSocket(url);
+    handleConnectionEvents();
+  } catch (error) {
+    console.error('Failed to create WebSocket:', error);
+  }
 }
 
 function handleConnectionEvents() {
   if (!socket) return;
   
-  socket.onopen = () => {
-    console.log('Connected to server.');
+  socket.onopen = (event) => {
+    console.log('✅ WebSocket connected successfully');
+    console.log('Connection event:', event);
     updateStatus('connected');
-    connectionAttempt = 0; 
+    reconnectAttempts = 0; // Reset reconnect counter on successful connection
     sendHeartbeat(); 
     if (heartbeatInterval) clearInterval(heartbeatInterval);
-    heartbeatInterval = setInterval(sendHeartbeat, HEARTBEAT_INTERVAL);
+    heartbeatInterval = setInterval(sendHeartbeat, HEARTBEAT_INTERVAL_MS);
   };
 
-  socket.onclose = () => {
-    console.log('Disconnected from server.');
+  socket.onclose = (event) => {
+    console.log('🔴 WebSocket connection closed');
+    console.log('Close code:', event.code, 'Reason:', event.reason, 'Was clean:', event.wasClean);
     updateStatus('disconnected');
-    if (heartbeatInterval) clearInterval(heartbeatInterval);
-    if (lagTimeout) clearTimeout(lagTimeout);
-    reconnectIfDropped();
+    cleanupTimers();
+    // Only attempt to reconnect if the closure was not clean (i.e., unexpected)
+    if (!event.wasClean) {
+        reconnectIfDropped();
+    }
   };
 
   socket.onerror = (error) => {
-    console.error('WebSocket error:', error);
+    console.error('=== WebSocket Error Details ===');
+    console.error('Error object:', error);
+    if(socket) {
+        console.error('Socket readyState:', socket.readyState);
+        console.error('Socket URL:', socket.url);
+    }
+    console.error('Timestamp:', new Date().toISOString());
+    console.error('================================');
     updateStatus('disconnected');
+    // The 'onclose' event will be fired automatically after 'onerror', 
+    // so reconnection logic is handled there.
     socket?.close();
   };
 
   socket.onmessage = (event) => {
     try {
+      console.log('📨 WebSocket message received:', event.data);
       const message: ServerMessage = JSON.parse(event.data);
       
       if (message.action === 'pong') {
@@ -128,8 +158,6 @@ function handleConnectionEvents() {
         }
       } else if (message.action === 'score_ack') {
         console.log(`Score acknowledged for ${message.target}`);
-      } else {
-        console.log('Received broadcasted action:', message);
       }
     } catch (e) {
       console.error('Failed to parse server message:', event.data, e);
@@ -138,15 +166,20 @@ function handleConnectionEvents() {
 }
 
 function reconnectIfDropped() {
-  if (!serverIP) return;
-  
-  const delay = Math.pow(2, connectionAttempt) * 1000;
-  console.log(`Attempting to reconnect in ${delay / 1000} seconds...`);
-  
-  reconnectTimeout = setTimeout(() => {
-    connectionAttempt++;
-    connectToServer(serverIP!, serverPort);
-  }, delay);
+    if (reconnectAttempts >= MAX_RECONNECT_ATTEMPTS) {
+        console.error(`Max reconnect attempts (${MAX_RECONNECT_ATTEMPTS}) reached. Stopping.`);
+        return;
+    }
+
+    if (!serverIP) return;
+    
+    reconnectAttempts++;
+    const delay = Math.pow(2, reconnectAttempts - 1) * INITIAL_RECONNECT_DELAY_MS;
+    console.log(`Connection dropped. Attempting reconnect ${reconnectAttempts}/${MAX_RECONNECT_ATTEMPTS} in ${delay / 1000}s...`);
+
+    reconnectTimeout = setTimeout(() => {
+        connectToServer(serverIP!, serverPort);
+    }, delay);
 }
 
 
@@ -185,7 +218,7 @@ export function sendHeartbeat(): void {
       if (lagTimeout) clearTimeout(lagTimeout);
       lagTimeout = setTimeout(() => {
         updateStatus('lagging');
-      }, LAG_THRESHOLD);
+      }, LAG_THRESHOLD_MS);
 
     } catch (error) {
       console.error('Failed to send heartbeat:', error);
@@ -247,14 +280,17 @@ export async function loadSettings(): Promise<{ refereeId: Referee, scoreSetting
 }
 
 export function disconnectFromServer(): void {
-  console.log('Disconnecting from server...');
-  clearTimeout(reconnectTimeout);
-  if (heartbeatInterval) clearInterval(heartbeatInterval);
-  if (lagTimeout) clearTimeout(lagTimeout);
-
+  console.log('Manually disconnecting from server...');
+  cleanupTimers();
+  reconnectAttempts = 0; // Reset counter on manual disconnect.
+  
   if (socket) {
-    socket.onclose = null; // Prevent reconnect logic from firing on manual disconnect
-    socket.close();
+    // Temporarily remove the onclose handler to prevent reconnection logic
+    // from firing on a clean, manual disconnect.
+    socket.onclose = () => {
+        console.log('WebSocket connection cleanly closed by user.');
+    };
+    socket.close(1000, "User disconnected"); // 1000 indicates a normal closure
     socket = null;
   }
   updateStatus('disconnected');
