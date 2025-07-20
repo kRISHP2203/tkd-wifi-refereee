@@ -1,3 +1,4 @@
+
 'use client';
 
 import type { Referee, ConnectionStatus, ScoreSettings, ClientMessage, ServerMessage, ScoreData } from '@/types';
