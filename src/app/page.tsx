@@ -101,7 +101,7 @@ export default function Home() {
           <AlertTitle>Disconnected from server</AlertTitle>
           <AlertDescription>
             Please check your connection or server IP in settings.
-          </Description>
+          </AlertDescription>
         </Alert>
       )}
       <main className="flex-1">
