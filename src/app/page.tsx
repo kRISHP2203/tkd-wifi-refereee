@@ -9,8 +9,10 @@ import { useToast } from "@/hooks/use-toast"
 import * as TKDService from '@/lib/tkd-service';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { WifiOff } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export default function Home() {
+  const [isClient, setIsClient] = useState(false);
   const [refereeId, setRefereeId] = useState<Referee>(1);
   const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>('disconnected');
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
@@ -27,6 +29,8 @@ export default function Home() {
   const { toast } = useToast()
 
   useEffect(() => {
+    setIsClient(true);
+
     async function initialize() {
       const settings = await TKDService.loadSettings();
       if (settings) {
@@ -41,13 +45,16 @@ export default function Home() {
     }
     initialize();
 
-    TKDService.onServerConnectionChange((status) => {
+    const handleStatusChange = (status: ConnectionStatus) => {
       setConnectionStatus(status);
       setShowConnectionAlert(status === 'disconnected');
-    });
+    };
+
+    TKDService.onServerConnectionChange(handleStatusChange);
 
     return () => {
       TKDService.disconnectFromServer();
+      TKDService.onServerConnectionChange(() => {}); // Clear listener
     };
 
   }, []);
@@ -92,6 +99,22 @@ export default function Home() {
     }
   };
 
+  if (!isClient) {
+    return (
+      <div className="flex flex-col h-screen bg-background overflow-hidden">
+        <header className="bg-neutral-900 p-3 flex justify-between items-center shadow-md shrink-0 h-[60px]">
+          <Skeleton className="h-6 w-36" />
+          <div className="flex items-center gap-4">
+            <Skeleton className="h-6 w-24" />
+            <Skeleton className="h-10 w-10 rounded-full" />
+          </div>
+        </header>
+        <main className="flex-1">
+           <Skeleton className="h-full w-full" />
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col h-screen bg-background text-foreground overflow-hidden">
