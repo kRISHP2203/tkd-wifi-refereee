@@ -24,7 +24,8 @@ type SettingsPanelProps = {
   scoreSettings: ScoreSettings;
   onScoreSettingsChange: (settings: ScoreSettings) => void;
   serverIp: string;
-  onServerIpChange: (ip: string) => void;
+  serverPort: number;
+  onServerConnectionChange: (ip: string, port: number) => void;
 };
 
 export default function SettingsPanel({
@@ -35,10 +36,12 @@ export default function SettingsPanel({
   scoreSettings,
   onScoreSettingsChange,
   serverIp,
-  onServerIpChange,
+  serverPort,
+  onServerConnectionChange,
 }: SettingsPanelProps) {
   const [localScoreSettings, setLocalScoreSettings] = useState(scoreSettings);
   const [localServerIp, setLocalServerIp] = useState(serverIp);
+  const [localServerPort, setLocalServerPort] = useState(String(serverPort));
 
   useEffect(() => {
     setLocalScoreSettings(scoreSettings);
@@ -47,11 +50,16 @@ export default function SettingsPanel({
   useEffect(() => {
     setLocalServerIp(serverIp);
   }, [serverIp]);
+  
+  useEffect(() => {
+    setLocalServerPort(String(serverPort));
+  }, [serverPort]);
 
 
   const handleSave = () => {
     onScoreSettingsChange(localScoreSettings);
-    onServerIpChange(localServerIp);
+    const portNumber = Number(localServerPort);
+    onServerConnectionChange(localServerIp, isNaN(portNumber) ? 8080 : portNumber);
     onOpenChange(false);
   };
 
@@ -73,15 +81,26 @@ export default function SettingsPanel({
         </SheetHeader>
         <div className="py-4 space-y-6">
            <div>
-            <Label className="text-base font-semibold">Server IP Address</Label>
-            <p className="text-sm text-muted-foreground mb-4">Enter the IP of the TKD WiFi Server.</p>
-            <Input 
-              id="server-ip" 
-              type="text" 
-              value={localServerIp} 
-              onChange={e => setLocalServerIp(e.target.value)} 
-              placeholder="e.g., 192.168.1.100"
-            />
+            <Label className="text-base font-semibold">Server Connection</Label>
+            <p className="text-sm text-muted-foreground mb-4">Enter the IP and Port of the TKD WiFi Server.</p>
+            <div className="flex items-center gap-2">
+              <Input 
+                id="server-ip" 
+                type="text" 
+                value={localServerIp} 
+                onChange={e => setLocalServerIp(e.target.value)} 
+                placeholder="e.g., 192.168.1.100"
+                className="flex-grow"
+              />
+              <Input
+                id="server-port"
+                type="number"
+                value={localServerPort}
+                onChange={e => setLocalServerPort(e.target.value)}
+                placeholder="8080"
+                className="w-24"
+              />
+            </div>
           </div>
 
           <Separator />

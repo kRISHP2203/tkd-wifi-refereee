@@ -22,6 +22,7 @@ export default function Home() {
     punch: 1,
   });
   const [serverIp, setServerIp] = useState('');
+  const [serverPort, setServerPort] = useState(8080);
   const [showConnectionAlert, setShowConnectionAlert] = useState(false);
   const { toast } = useToast()
 
@@ -33,7 +34,8 @@ export default function Home() {
         setScoreSettings(settings.scoreSettings);
         if (settings.serverIp) {
           setServerIp(settings.serverIp);
-          TKDService.connectToServer(settings.serverIp);
+          setServerPort(settings.serverPort);
+          TKDService.connectToServer(settings.serverIp, settings.serverPort);
         }
       }
     }
@@ -54,7 +56,7 @@ export default function Home() {
     const scoreData: ScoreData = {
       points: points,
       target: target,
-      action: 'score', // As per new spec
+      action: 'score',
     };
     
     const sent = TKDService.sendScore(scoreData);
@@ -79,11 +81,12 @@ export default function Home() {
     TKDService.saveScoreSettings(newSettings);
   };
   
-  const handleServerIpChange = (ip: string) => {
+  const handleServerConnectionChange = (ip: string, port: number) => {
     setServerIp(ip);
-    TKDService.setServerIP(ip);
+    setServerPort(port);
+    TKDService.setServerConnectionDetails(ip, port);
     if(ip) {
-      TKDService.connectToServer(ip);
+      TKDService.connectToServer(ip, port);
     } else {
       TKDService.disconnectFromServer();
     }
@@ -116,7 +119,8 @@ export default function Home() {
         scoreSettings={scoreSettings}
         onScoreSettingsChange={handleScoreSettingsChange}
         serverIp={serverIp}
-        onServerIpChange={handleServerIpChange}
+        serverPort={serverPort}
+        onServerConnectionChange={handleServerConnectionChange}
       />
     </div>
   );

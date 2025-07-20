@@ -4,13 +4,15 @@ import type { Referee, ConnectionStatus, ScoreSettings, ClientMessage, ServerMes
 
 const ID_STORAGE_KEY = 'TKD_REFEREE_ID';
 const IP_STORAGE_KEY = 'TKD_SERVER_IP';
+const PORT_STORAGE_KEY = 'TKD_SERVER_PORT';
 const SCORE_SETTINGS_KEY = 'TKD_SCORE_SETTINGS';
-const WEBSOCKET_PORT = 8080;
+const DEFAULT_PORT = 8080;
 const HEARTBEAT_INTERVAL = 5000; // 5 seconds
 const LAG_THRESHOLD = 2000; // 2 seconds
 
 let socket: WebSocket | null = null;
 let serverIP: string | null = null;
+let serverPort: number = DEFAULT_PORT;
 let refereeId: Referee = 1;
 let heartbeatInterval: NodeJS.Timeout | null = null;
 let lagTimeout: NodeJS.Timeout | null = null;
@@ -46,16 +48,18 @@ export function setRefereeID(id: Referee): void {
   localStorage.setItem(ID_STORAGE_KEY, String(id));
 }
 
-export function setServerIP(ip: string): void {
+export function setServerConnectionDetails(ip: string, port: number): void {
   serverIP = ip;
+  serverPort = port;
   localStorage.setItem(IP_STORAGE_KEY, ip);
+  localStorage.setItem(PORT_STORAGE_KEY, String(port));
 }
 
 export function saveScoreSettings(settings: ScoreSettings): void {
   localStorage.setItem(SCORE_SETTINGS_KEY, JSON.stringify(settings));
 }
 
-export function connectToServer(ipAddress: string): void {
+export function connectToServer(ipAddress: string, port: number): void {
   if (!ipAddress) {
     console.log('IP address is empty, disconnecting.');
     disconnectFromServer();
@@ -63,19 +67,19 @@ export function connectToServer(ipAddress: string): void {
   }
   
   serverIP = ipAddress;
+  serverPort = port;
+  
+  const url = `ws://${serverIP}:${serverPort}`;
   
   if (socket && (socket.readyState === WebSocket.OPEN || socket.readyState === WebSocket.CONNECTING)) {
-    if (socket.url.includes(ipAddress)) {
-      console.log('Already connected or connecting to this IP.');
+    if (socket.url === url) {
+      console.log('Already connected or connecting to this address.');
       return;
     }
     disconnectFromServer();
   }
 
   clearTimeout(reconnectTimeout);
-
-  const protocol = 'ws';
-  const url = `${protocol}://${serverIP}:${WEBSOCKET_PORT}`;
   console.log(`Connecting to ${url}...`);
   socket = new WebSocket(url);
   
@@ -136,7 +140,7 @@ function reconnectIfDropped() {
   
   reconnectTimeout = setTimeout(() => {
     connectionAttempt++;
-    connectToServer(serverIP!);
+    connectToServer(serverIP!, serverPort);
   }, delay);
 }
 
@@ -185,10 +189,11 @@ export function sendHeartbeat(): void {
   }
 }
 
-export async function loadSettings(): Promise<{ refereeId: Referee, scoreSettings: ScoreSettings, serverIp: string | null }> {
+export async function loadSettings(): Promise<{ refereeId: Referee, scoreSettings: ScoreSettings, serverIp: string | null, serverPort: number }> {
   try {
     const storedId = localStorage.getItem(ID_STORAGE_KEY);
     const storedIp = localStorage.getItem(IP_STORAGE_KEY);
+    const storedPort = localStorage.getItem(PORT_STORAGE_KEY);
     const storedScoreSettings = localStorage.getItem(SCORE_SETTINGS_KEY);
 
     let loadedScoreSettings = defaultScoreSettings;
@@ -203,22 +208,32 @@ export async function loadSettings(): Promise<{ refereeId: Referee, scoreSetting
     if (storedId) {
       refereeId = Number(storedId) as Referee;
     }
-
+    
     if (storedIp) {
       serverIP = storedIp;
     }
+    
+    if (storedPort) {
+      const portNum = Number(storedPort);
+      if (!isNaN(portNum)) {
+        serverPort = portNum;
+      }
+    }
+
 
     return {
       refereeId: refereeId || 1,
       scoreSettings: loadedScoreSettings,
-      serverIp: serverIP
+      serverIp: serverIP,
+      serverPort: serverPort
     };
   } catch (error) {
     console.error('Failed to load settings:', error);
     return {
       refereeId: 1,
       scoreSettings: defaultScoreSettings,
-      serverIp: null
+      serverIp: null,
+      serverPort: DEFAULT_PORT
     };
   }
 }
