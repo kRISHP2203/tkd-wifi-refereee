@@ -34,7 +34,7 @@ const nextConfig: NextConfig = {
           {
             key: 'Content-Security-Policy',
             value: isDev
-              ? "frame-ancestors 'self' https://*.firebase.app https://*.web.app https://*.cloudworkstations.dev; upgrade-insecure-requests; connect-src 'self' ws: wss: https:;"
+              ? "frame-ancestors 'self' https://*.cloudworkstations.dev; upgrade-insecure-requests; connect-src 'self' ws: wss: https:;"
               : "frame-ancestors 'self' https://*.firebase.app https://*.web.app; upgrade-insecure-requests; connect-src 'self' wss: https:;",
           },
         ],
