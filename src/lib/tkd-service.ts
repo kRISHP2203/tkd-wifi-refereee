@@ -60,6 +60,8 @@ export function saveScoreSettings(settings: ScoreSettings): void {
 }
 
 export function connectToServer(ipAddress: string, port: number): void {
+  if (typeof window === 'undefined') return;
+
   if (!ipAddress) {
     console.log('IP address is empty, disconnecting.');
     disconnectFromServer();
@@ -69,7 +71,9 @@ export function connectToServer(ipAddress: string, port: number): void {
   serverIP = ipAddress;
   serverPort = port;
   
-  const url = `ws://${serverIP}:${serverPort}`;
+  const isSecure = window.location.protocol === 'https:';
+  const protocol = isSecure ? 'wss' : 'ws';
+  const url = `${protocol}://${serverIP}:${serverPort}`;
   
   if (socket && (socket.readyState === WebSocket.OPEN || socket.readyState === WebSocket.CONNECTING)) {
     if (socket.url === url) {
@@ -170,7 +174,7 @@ export function sendScore(payload: ScoreData): boolean {
 export function sendHeartbeat(): void {
   if (socket && socket.readyState === WebSocket.OPEN) {
      try {
-      const message = { 
+      const message: ClientMessage = { 
         action: 'heartbeat',
         refereeId: refereeId,
         timestamp: Date.now() 
@@ -191,6 +195,9 @@ export function sendHeartbeat(): void {
 
 export async function loadSettings(): Promise<{ refereeId: Referee, scoreSettings: ScoreSettings, serverIp: string | null, serverPort: number }> {
   try {
+    if (typeof window === 'undefined') {
+      return { refereeId: 1, scoreSettings: defaultScoreSettings, serverIp: null, serverPort: DEFAULT_PORT };
+    }
     const storedId = localStorage.getItem(ID_STORAGE_KEY);
     const storedIp = localStorage.getItem(IP_STORAGE_KEY);
     const storedPort = localStorage.getItem(PORT_STORAGE_KEY);
