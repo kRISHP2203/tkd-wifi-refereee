@@ -92,8 +92,8 @@ const ScoreButton = ({
   };
 
   const handleInteractionEnd = (clientX: number, clientY: number) => {
-    setIsTapped(false);
     if (!touchStartRef.current) return;
+    setIsTapped(false);
 
     const touchEnd = { x: clientX, y: clientY, time: Date.now() };
     const start = touchStartRef.current;
@@ -111,6 +111,11 @@ const ScoreButton = ({
 
     touchStartRef.current = null;
   };
+  
+  const cancelInteraction = () => {
+    setIsTapped(false);
+    touchStartRef.current = null;
+  }
 
   return (
     <div 
@@ -120,8 +125,10 @@ const ScoreButton = ({
       )}
       onTouchStart={(e) => handleInteractionStart(e.touches[0].clientX, e.touches[0].clientY)}
       onTouchEnd={(e) => handleInteractionEnd(e.changedTouches[0].clientX, e.changedTouches[0].clientY)}
+      onTouchCancel={cancelInteraction}
       onMouseDown={(e) => handleInteractionStart(e.clientX, e.clientY)}
       onMouseUp={(e) => handleInteractionEnd(e.clientX, e.clientY)}
+      onMouseLeave={cancelInteraction}
       role="button"
       aria-label={`${label}`}
     >
