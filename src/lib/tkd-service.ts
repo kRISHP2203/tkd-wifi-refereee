@@ -75,14 +75,12 @@ export function saveScoreSettings(settings: ScoreSettings): void {
 export function connectToServer(ipAddress: string, port: number): void {
   if (typeof window === 'undefined') return;
 
-  // If already connected or attempting to connect, do nothing.
   if (socket && (socket.readyState === WebSocket.OPEN || socket.readyState === WebSocket.CONNECTING)) {
       console.log('WebSocket is already open or connecting.');
       return;
   }
 
-  // Clear any pending reconnection attempts before starting a new manual one.
-  if (reconnectTimeout) clearTimeout(reconnectTimeout);
+  cleanupTimers();
   
   if (!ipAddress) {
     console.log('IP address is empty, ensuring disconnection.');
@@ -114,7 +112,7 @@ function handleConnectionEvents() {
     console.log('✅ WebSocket connected successfully');
     console.log('Connection event:', event);
     updateStatus('connected');
-    reconnectAttempts = 0; // Reset reconnect counter on successful connection
+    reconnectAttempts = 0; 
     sendHeartbeat(); 
     if (heartbeatInterval) clearInterval(heartbeatInterval);
     heartbeatInterval = setInterval(sendHeartbeat, HEARTBEAT_INTERVAL_MS);
@@ -125,7 +123,6 @@ function handleConnectionEvents() {
     console.log('Close code:', event.code, 'Reason:', event.reason, 'Was clean:', event.wasClean);
     updateStatus('disconnected');
     cleanupTimers();
-    // Only attempt to reconnect if the closure was not clean (i.e., unexpected)
     if (!event.wasClean) {
         reconnectIfDropped();
     }
@@ -139,10 +136,9 @@ function handleConnectionEvents() {
         console.error('Socket URL:', socket.url);
     }
     console.error('Timestamp:', new Date().toISOString());
+    console.error('This often happens due to a firewall on the server, the server app not running, or a network issue.');
     console.error('================================');
     updateStatus('disconnected');
-    // The 'onclose' event will be fired automatically after 'onerror', 
-    // so reconnection logic is handled there.
     socket?.close();
   };
 
@@ -282,15 +278,13 @@ export async function loadSettings(): Promise<{ refereeId: Referee, scoreSetting
 export function disconnectFromServer(): void {
   console.log('Manually disconnecting from server...');
   cleanupTimers();
-  reconnectAttempts = 0; // Reset counter on manual disconnect.
+  reconnectAttempts = 0;
   
   if (socket) {
-    // Temporarily remove the onclose handler to prevent reconnection logic
-    // from firing on a clean, manual disconnect.
     socket.onclose = () => {
         console.log('WebSocket connection cleanly closed by user.');
     };
-    socket.close(1000, "User disconnected"); // 1000 indicates a normal closure
+    socket.close(1000, "User disconnected");
     socket = null;
   }
   updateStatus('disconnected');
