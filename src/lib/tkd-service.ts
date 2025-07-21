@@ -76,8 +76,8 @@ export function connectToServer(ipAddress: string, port: number): void {
   if (typeof window === 'undefined') return;
 
   if (socket && (socket.readyState === WebSocket.OPEN || socket.readyState === WebSocket.CONNECTING)) {
-      console.log('WebSocket is already open or connecting.');
-      return;
+      console.log('WebSocket is already open or connecting. Closing existing connection before creating a new one.');
+      socket.close(1000, "Initiating new connection");
   }
 
   cleanupTimers();
@@ -101,7 +101,7 @@ export function connectToServer(ipAddress: string, port: number): void {
     socket = new WebSocket(url);
     handleConnectionEvents();
   } catch (error) {
-    console.error('Failed to create WebSocket:', error);
+    console.error('Failed to create WebSocket instance:', error);
   }
 }
 
@@ -123,7 +123,7 @@ function handleConnectionEvents() {
     console.log('Close code:', event.code, 'Reason:', event.reason, 'Was clean:', event.wasClean);
     updateStatus('disconnected');
     cleanupTimers();
-    if (!event.wasClean) {
+    if (!event.wasClean && event.code !== 1000) { // Don't auto-reconnect on manual close
         reconnectIfDropped();
     }
   };
@@ -139,7 +139,6 @@ function handleConnectionEvents() {
     console.error('This often happens due to a firewall on the server, the server app not running, or a network issue.');
     console.error('================================');
     updateStatus('disconnected');
-    socket?.close();
   };
 
   socket.onmessage = (event) => {
@@ -149,6 +148,7 @@ function handleConnectionEvents() {
       
       if (message.action === 'pong') {
         if (lagTimeout) clearTimeout(lagTimeout);
+        lagTimeout = null;
         if (connectionStatus === 'lagging' || connectionStatus === 'disconnected') {
            updateStatus('connected');
         }
@@ -167,7 +167,10 @@ function reconnectIfDropped() {
         return;
     }
 
-    if (!serverIP) return;
+    if (!serverIP) {
+        console.log('No server IP set, cannot reconnect.');
+        return;
+    }
     
     reconnectAttempts++;
     const delay = Math.pow(2, reconnectAttempts - 1) * INITIAL_RECONNECT_DELAY_MS;
@@ -242,27 +245,15 @@ export async function loadSettings(): Promise<{ refereeId: Referee, scoreSetting
       }
     }
 
-    if (storedId) {
-      refereeId = Number(storedId) as Referee;
-    }
-    
-    if (storedIp) {
-      serverIP = storedIp;
-    }
-    
-    if (storedPort) {
-      const portNum = Number(storedPort);
-      if (!isNaN(portNum)) {
-        serverPort = portNum;
-      }
-    }
-
+    const loadedRefereeId = storedId ? Number(storedId) as Referee : 1;
+    const loadedServerIp = storedIp || null;
+    const loadedServerPort = storedPort ? Number(storedPort) : DEFAULT_PORT;
 
     return {
-      refereeId: refereeId || 1,
+      refereeId: loadedRefereeId,
       scoreSettings: loadedScoreSettings,
-      serverIp: serverIP,
-      serverPort: serverPort
+      serverIp: loadedServerIp,
+      serverPort: loadedServerPort
     };
   } catch (error) {
     console.error('Failed to load settings:', error);

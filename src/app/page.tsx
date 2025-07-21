@@ -29,9 +29,9 @@ export default function Home() {
   const { toast } = useToast()
 
   useEffect(() => {
-    setIsClient(true);
-
-    async function initialize() {
+    // This effect runs only once on the client after the component mounts.
+    // It loads settings from localStorage and establishes the WebSocket connection.
+    const initialize = async () => {
       const settings = await TKDService.loadSettings();
       if (settings) {
         setRefereeId(settings.refereeId);
@@ -42,7 +42,10 @@ export default function Home() {
           TKDService.connectToServer(settings.serverIp, settings.serverPort);
         }
       }
-    }
+      // Signal that we are on the client and initial data is loaded.
+      setIsClient(true);
+    };
+
     initialize();
 
     const handleStatusChange = (status: ConnectionStatus) => {
@@ -53,6 +56,7 @@ export default function Home() {
     TKDService.onServerConnectionChange(handleStatusChange);
 
     return () => {
+      // Cleanup on component unmount
       TKDService.disconnectFromServer();
       TKDService.onServerConnectionChange(() => {}); // Clear listener
     };
@@ -100,6 +104,8 @@ export default function Home() {
   };
 
   if (!isClient) {
+    // Render a skeleton loading screen on the server and during initial client render
+    // to prevent hydration errors.
     return (
       <div className="flex flex-col h-screen bg-background overflow-hidden">
         <header className="bg-neutral-900 p-3 flex justify-between items-center shadow-md shrink-0 h-[60px]">

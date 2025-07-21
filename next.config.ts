@@ -2,8 +2,19 @@ import type {NextConfig} from 'next';
 
 const isDev = process.env.NODE_ENV !== 'production';
 
+// Define the Content Security Policy
+const ContentSecurityPolicy = `
+  default-src 'self';
+  script-src 'self' 'unsafe-eval' 'unsafe-inline' https://fonts.gstatic.com;
+  child-src 'self';
+  style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
+  font-src 'self' https://fonts.gstatic.com;
+  connect-src 'self' ${isDev ? 'ws: wss:' : ''};
+  frame-ancestors 'self' ${isDev ? 'https://*.cloudworkstations.dev' : 'https://*.firebase.app https://*.web.app'};
+`.replace(/\s{2,}/g, ' ').trim();
+
+
 const nextConfig: NextConfig = {
-  /* config options here */
   typescript: {
     ignoreBuildErrors: true,
   },
@@ -33,9 +44,7 @@ const nextConfig: NextConfig = {
         headers: [
           {
             key: 'Content-Security-Policy',
-            value: isDev
-              ? "frame-ancestors 'self' https://*.cloudworkstations.dev;"
-              : "frame-ancestors 'self' https://*.firebase.app https://*.web.app;",
+            value: ContentSecurityPolicy,
           },
         ],
       },

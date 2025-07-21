@@ -197,6 +197,8 @@ const PunchButton = ({ onScore, target, className, points }: {
             onMouseUp={handleInteractionEnd}
             onTouchStart={handleInteractionStart}
             onTouchEnd={handleInteractionEnd}
+            onMouseLeave={handleInteractionEnd}
+            onTouchCancel={handleInteractionEnd}
             className={cn(
                 'cursor-pointer flex flex-col items-center justify-center bg-black/30 backdrop-blur-sm border-2 border-black/50 rounded-lg shadow-2xl transition-transform duration-100 ease-out w-32 h-32 md:w-36 md:h-36',
                 isTapped ? 'scale-95' : 'scale-100',
