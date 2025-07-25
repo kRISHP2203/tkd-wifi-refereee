@@ -102,6 +102,7 @@ export function connectToServer(ipAddress: string, port: number): void {
     handleConnectionEvents();
   } catch (error) {
     console.error('Failed to create WebSocket instance:', error);
+    updateStatus('disconnected');
   }
 }
 
@@ -123,7 +124,8 @@ function handleConnectionEvents() {
     console.log('Close code:', event.code, 'Reason:', event.reason, 'Was clean:', event.wasClean);
     updateStatus('disconnected');
     cleanupTimers();
-    if (!event.wasClean && event.code !== 1000) { // Don't auto-reconnect on manual close
+    // Reconnect only if it was not a clean, intentional close
+    if (!event.wasClean && event.code !== 1000) { 
         reconnectIfDropped();
     }
   };
@@ -136,7 +138,11 @@ function handleConnectionEvents() {
         console.error('Socket URL:', socket.url);
     }
     console.error('Timestamp:', new Date().toISOString());
-    console.error('This often happens due to a firewall on the server, the server app not running, or a network issue.');
+    console.error('This often happens due to one of the following reasons:');
+    console.error('1. The server at the specified IP/Port is not running or not reachable.');
+    console.error('2. A firewall on the server is blocking the connection.');
+    console.error('3. The server does not support the required WebSocket protocol (ws:// or wss://).');
+    console.error('4. You are not on the same local network as the server.');
     console.error('================================');
     updateStatus('disconnected');
   };
@@ -272,6 +278,7 @@ export function disconnectFromServer(): void {
   reconnectAttempts = 0;
   
   if (socket) {
+    // Remove the old onclose listener to prevent reconnection logic from firing on a manual disconnect.
     socket.onclose = () => {
         console.log('WebSocket connection cleanly closed by user.');
     };
