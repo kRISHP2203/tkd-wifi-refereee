@@ -96,8 +96,10 @@ export function connectToServer(ipAddress: string, port: number): void {
   serverIP = ipAddress;
   serverPort = port;
   
+  const isConnectingToLocalhost = serverIP === 'localhost' || serverIP === '127.0.0.1';
   const isSecure = window.location.protocol === 'https:';
-  const protocol = isSecure ? 'wss' : 'ws';
+  // Use 'ws://' for localhost connections, otherwise match the page protocol.
+  const protocol = isSecure && !isConnectingToLocalhost ? 'wss' : 'ws';
   const url = `${protocol}://${serverIP}:${serverPort}`;
   
   console.log(`Attempting to connect to ${url}...`);
@@ -137,7 +139,7 @@ function handleConnectionEvents() {
   };
 
   socket.onerror = (error) => {
-    const errorMessage = 'Please check the following: \n1. The TKD WiFi Server is running on the target machine. \n2. The server machine\'s firewall is allowing connections on the specified port. \n3. This device and the server are on the same WiFi network.';
+    const errorMessage = 'Connection failed. Please check the following: \n1. The TKD WiFi Server is running on the target machine. \n2. The server machine\'s firewall is allowing connections on the specified port. \n3. This device and the server are on the same WiFi network.';
     console.error('=== WebSocket Error Details ===');
     console.error('Error object:', error);
     if(socket) {
@@ -145,7 +147,7 @@ function handleConnectionEvents() {
         console.error('Socket URL:', socket.url);
     }
     console.error('Timestamp:', new Date().toISOString());
-    console.error(errorMessage.replace(/\n/g, ' '));
+    console.error('This error is often due to the server not running, a firewall blocking the port, or being on the wrong network.');
     console.error('================================');
     updateStatus('disconnected');
     errorCallback(errorMessage);
