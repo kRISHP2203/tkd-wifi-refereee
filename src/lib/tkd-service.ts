@@ -25,6 +25,7 @@ let reconnectAttempts = 0;
 
 let connectionStatus: ConnectionStatus = 'disconnected';
 let statusChangeCallback: (status: ConnectionStatus) => void = () => {};
+let errorCallback: (error: string) => void = () => {};
 
 const defaultScoreSettings: ScoreSettings = {
   headTap: 3,
@@ -54,6 +55,10 @@ function cleanupTimers() {
 
 export function onServerConnectionChange(cb: (status: ConnectionStatus) => void): void {
   statusChangeCallback = cb;
+}
+
+export function onServerError(cb: (error: string) => void): void {
+  errorCallback = cb;
 }
 
 export function setRefereeID(id: Referee): void {
@@ -103,6 +108,7 @@ export function connectToServer(ipAddress: string, port: number): void {
   } catch (error) {
     console.error('Failed to create WebSocket instance:', error);
     updateStatus('disconnected');
+    errorCallback('Could not create WebSocket. Check for typos in the address or browser restrictions.');
   }
 }
 
@@ -131,6 +137,7 @@ function handleConnectionEvents() {
   };
 
   socket.onerror = (error) => {
+    const errorMessage = 'Please check the following: \n1. The TKD WiFi Server is running on the target machine. \n2. The server machine\'s firewall is allowing connections on the specified port. \n3. This device and the server are on the same WiFi network.';
     console.error('=== WebSocket Error Details ===');
     console.error('Error object:', error);
     if(socket) {
@@ -138,13 +145,10 @@ function handleConnectionEvents() {
         console.error('Socket URL:', socket.url);
     }
     console.error('Timestamp:', new Date().toISOString());
-    console.error('This often happens due to one of the following reasons:');
-    console.error('1. The server at the specified IP/Port is not running or not reachable.');
-    console.error('2. A firewall on the server is blocking the connection.');
-    console.error('3. The server does not support the required WebSocket protocol (ws:// or wss://).');
-    console.error('4. You are not on the same local network as the server.');
+    console.error(errorMessage.replace(/\n/g, ' '));
     console.error('================================');
     updateStatus('disconnected');
+    errorCallback(errorMessage);
   };
 
   socket.onmessage = (event) => {
@@ -170,6 +174,7 @@ function handleConnectionEvents() {
 function reconnectIfDropped() {
     if (reconnectAttempts >= MAX_RECONNECT_ATTEMPTS) {
         console.error(`Max reconnect attempts (${MAX_RECONNECT_ATTEMPTS}) reached. Stopping.`);
+        errorCallback('Could not reconnect to the server. Please check the connection and settings.');
         return;
     }
 

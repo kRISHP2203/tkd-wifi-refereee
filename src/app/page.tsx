@@ -15,6 +15,7 @@ export default function Home() {
   const [isClient, setIsClient] = useState(false);
   const [refereeId, setRefereeId] = useState<Referee>(1);
   const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>('disconnected');
+  const [connectionError, setConnectionError] = useState<string | null>(null);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [scoreSettings, setScoreSettings] = useState<ScoreSettings>({
     headTap: 3,
@@ -25,7 +26,6 @@ export default function Home() {
   });
   const [serverIp, setServerIp] = useState('');
   const [serverPort, setServerPort] = useState(8080);
-  const [showConnectionAlert, setShowConnectionAlert] = useState(false);
   const { toast } = useToast()
 
   useEffect(() => {
@@ -50,15 +50,23 @@ export default function Home() {
 
     const handleStatusChange = (status: ConnectionStatus) => {
       setConnectionStatus(status);
-      setShowConnectionAlert(status === 'disconnected');
+      if (status !== 'disconnected') {
+        setConnectionError(null);
+      }
     };
+    
+    const handleError = (error: string) => {
+      setConnectionError(error);
+    }
 
     TKDService.onServerConnectionChange(handleStatusChange);
+    TKDService.onServerError(handleError);
 
     return () => {
       // Cleanup on component unmount
       TKDService.disconnectFromServer();
       TKDService.onServerConnectionChange(() => {}); // Clear listener
+      TKDService.onServerError(() => {}); // Clear listener
     };
 
   }, []);
@@ -128,12 +136,12 @@ export default function Home() {
         status={connectionStatus} 
         onSettingsClick={() => setIsSettingsOpen(true)} 
       />
-      {showConnectionAlert && (
+      {connectionStatus === 'disconnected' && connectionError && (
         <Alert variant="destructive" className="m-2 rounded-lg">
           <WifiOff className="h-4 w-4" />
-          <AlertTitle>Disconnected from server</AlertTitle>
+          <AlertTitle>Connection Failed</AlertTitle>
           <AlertDescription>
-            Please check your connection or server IP in settings.
+            {connectionError}
           </AlertDescription>
         </Alert>
       )}
