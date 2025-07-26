@@ -80,16 +80,22 @@ export function saveScoreSettings(settings: ScoreSettings): void {
 export function connectToServer(ipAddress: string, port: number): void {
   if (typeof window === 'undefined') return;
 
-  if (socket && (socket.readyState === WebSocket.OPEN || socket.readyState === WebSocket.CONNECTING)) {
-      console.log('WebSocket is already open or connecting. Closing existing connection before creating a new one.');
-      socket.close(1000, "Initiating new connection");
+  // Fully disconnect and clean up any existing socket before creating a new one.
+  if (socket) {
+    console.log('WebSocket is already open or connecting. Closing existing connection before creating a new one.');
+    // Temporarily remove onclose to prevent reconnect logic from firing on a manual change.
+    socket.onclose = null;
+    socket.close(1000, "Initiating new connection");
+    socket = null;
   }
 
   cleanupTimers();
+  reconnectAttempts = 0; // Reset reconnect attempts on a new manual connection.
   
   if (!ipAddress) {
     console.log('IP address is empty, ensuring disconnection.');
-    disconnectFromServer();
+    updateStatus('disconnected');
+    errorCallback('Server IP address is not set.');
     return;
   }
   
@@ -97,9 +103,8 @@ export function connectToServer(ipAddress: string, port: number): void {
   serverPort = port;
   
   const isConnectingToLocalhost = serverIP === 'localhost' || serverIP === '127.0.0.1';
-  const isSecure = window.location.protocol === 'https:';
-  // Use 'ws://' for localhost connections, otherwise match the page protocol.
-  const protocol = isSecure && !isConnectingToLocalhost ? 'wss' : 'ws';
+  // Use insecure 'ws://' for localhost, otherwise match the page protocol for security.
+  const protocol = window.location.protocol === 'https:' && !isConnectingToLocalhost ? 'wss' : 'ws';
   const url = `${protocol}://${serverIP}:${serverPort}`;
   
   console.log(`Attempting to connect to ${url}...`);
@@ -119,7 +124,6 @@ function handleConnectionEvents() {
   
   socket.onopen = (event) => {
     console.log('✅ WebSocket connected successfully');
-    console.log('Connection event:', event);
     updateStatus('connected');
     reconnectAttempts = 0; 
     sendHeartbeat(); 
@@ -132,8 +136,8 @@ function handleConnectionEvents() {
     console.log('Close code:', event.code, 'Reason:', event.reason, 'Was clean:', event.wasClean);
     updateStatus('disconnected');
     cleanupTimers();
-    // Reconnect only if it was not a clean, intentional close
-    if (!event.wasClean && event.code !== 1000) { 
+    // Reconnect only if it was not a clean, intentional close (code 1000)
+    if (event.code !== 1000) { 
         reconnectIfDropped();
     }
   };
@@ -155,13 +159,12 @@ function handleConnectionEvents() {
 
   socket.onmessage = (event) => {
     try {
-      console.log('📨 WebSocket message received:', event.data);
       const message: ServerMessage = JSON.parse(event.data);
       
       if (message.action === 'pong') {
         if (lagTimeout) clearTimeout(lagTimeout);
         lagTimeout = null;
-        if (connectionStatus === 'lagging' || connectionStatus === 'disconnected') {
+        if (connectionStatus === 'lagging') {
            updateStatus('connected');
         }
       } else if (message.action === 'score_ack') {
